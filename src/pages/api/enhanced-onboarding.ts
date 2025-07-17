@@ -47,6 +47,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Send notification email to admin
     try {
+      console.log('Preparing admin notification email for:', {
+        businessName: formData.business_name,
+        adminEmail: process.env.ADMIN_EMAIL ? `${process.env.ADMIN_EMAIL.substring(0, 3)}***@***` : 'using default',
+        submissionId: submission.id
+      })
+      
       const adminEmail = createEnhancedAdminNotificationEmail(enhancedSubmission)
       
       // Prepare attachments for admin email
@@ -63,14 +69,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
       }
 
+      console.log('Sending admin notification with form data:', {
+        businessName: formData.business_name,
+        email: formData.email,
+        plan: formData.plan,
+        attachmentCount: attachments.length,
+        hasMenuFile: !!fileUrls.menuFileUrl,
+        hasFaqFile: !!fileUrls.faqFileUrl,
+        additionalDocsCount: fileUrls.additionalDocsUrls?.length || 0
+      })
+
       if (attachments.length > 0) {
         await sendEmailWithAttachments(adminEmail, attachments, { preventDuplicates: true, emailType: 'form_submission' })
       } else {
         await sendEmail(adminEmail, { preventDuplicates: true, emailType: 'form_submission' })
       }
-      console.log(`Admin notification sent for ${formData.business_name} with ${attachments.length} attachments`)
+      console.log(`✅ Admin notification sent successfully for ${formData.business_name} with ${attachments.length} attachments`)
     } catch (emailError) {
-      console.error('Failed to send admin notification:', emailError)
+      console.error('❌ Failed to send admin notification:', {
+        error: emailError instanceof Error ? emailError.message : 'Unknown error',
+        businessName: formData.business_name,
+        submissionId: submission.id
+      })
       // Don't fail the entire request if email fails
     }
 

@@ -5,13 +5,23 @@ import { FormSubmission } from './supabase'
 function validateResendConfig() {
   const apiKey = process.env.RESEND_API_KEY
   const fromEmail = process.env.FROM_EMAIL
+  const adminEmail = process.env.ADMIN_EMAIL
+  
+  // Helper function to mask email for privacy
+  function maskEmail(email: string): string {
+    const [local, domain] = email.split('@')
+    const maskedLocal = local.charAt(0) + '*'.repeat(Math.max(0, local.length - 2)) + local.charAt(local.length - 1)
+    return `${maskedLocal}@${domain}`
+  }
   
   console.log('Resend Configuration Check:', {
     apiKeyExists: !!apiKey,
     apiKeyLength: apiKey?.length,
     apiKeyPrefix: apiKey?.substring(0, 8) + '...',
     fromEmailExists: !!fromEmail,
-    fromEmail: fromEmail || 'using default'
+    fromEmail: fromEmail || 'using default',
+    adminEmailExists: !!adminEmail,
+    adminEmail: adminEmail ? maskEmail(adminEmail) : 'using default (eliascolon23@gmail.com)'
   })
   
   if (!apiKey) {
@@ -22,7 +32,12 @@ function validateResendConfig() {
     throw new Error('RESEND_API_KEY appears to be invalid (should start with "re_")')
   }
   
-  return { apiKey, fromEmail }
+  // Validate admin email format if provided
+  if (adminEmail && !adminEmail.includes('@')) {
+    throw new Error('ADMIN_EMAIL appears to be invalid (must be a valid email address)')
+  }
+  
+  return { apiKey, fromEmail, adminEmail }
 }
 
 // Initialize Resend with proper error handling
@@ -42,7 +57,23 @@ const resend = initializeResend()
 export { resend }
 
 const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@ai-chatflows.com'
-const ADMIN_EMAIL = 'eliascolon23@gmail.com'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'eliascolon23@gmail.com'
+
+// Helper function to mask email for privacy in logs
+function maskEmail(email: string): string {
+  const [local, domain] = email.split('@')
+  const maskedLocal = local.charAt(0) + '*'.repeat(Math.max(0, local.length - 2)) + local.charAt(local.length - 1)
+  return `${maskedLocal}@${domain}`
+}
+
+// Helper function to log admin email operations
+function logAdminEmailOperation(operation: string, details: any) {
+  console.log(`Admin Email ${operation}:`, {
+    ...details,
+    adminEmail: maskEmail(ADMIN_EMAIL),
+    timestamp: new Date().toISOString()
+  })
+}
 
 export interface EmailTemplate {
   to: string[]
@@ -642,13 +673,27 @@ function markEmailSent(key: string): void {
 
 export async function sendEmailWithAttachments(template: EmailTemplate, attachments?: Array<{ filename: string; url: string }>, options?: { preventDuplicates?: boolean, emailType?: 'form_submission' | 'payment_confirmation' }) {
   try {
+    // Check if this is an admin email
+    const isAdminEmail = template.to.includes(ADMIN_EMAIL)
+    
+    if (isAdminEmail) {
+      logAdminEmailOperation('Attempting Send with Attachments', {
+        subject: template.subject,
+        attachmentCount: attachments?.length || 0,
+        attachmentFiles: attachments?.map(att => att.filename) || [],
+        emailType: options?.emailType,
+        preventDuplicates: options?.preventDuplicates
+      })
+    }
+    
     console.log('Attempting to send email with attachments:', {
       to: template.to,
       subject: template.subject,
       fromEmail: FROM_EMAIL,
       attachmentCount: attachments?.length || 0,
       preventDuplicates: options?.preventDuplicates,
-      emailType: options?.emailType
+      emailType: options?.emailType,
+      isAdminEmail: isAdminEmail
     })
 
     // Duplicate prevention logic
@@ -657,6 +702,12 @@ export async function sendEmailWithAttachments(template: EmailTemplate, attachme
       
       if (isDuplicateEmail(emailKey)) {
         console.log(`Skipping duplicate email: ${template.subject} to ${template.to[0]}`)
+        if (isAdminEmail) {
+          logAdminEmailOperation('Duplicate Skipped (with Attachments)', {
+            subject: template.subject,
+            reason: 'Duplicate prevention triggered'
+          })
+        }
         return { duplicate: true, skipped: true }
       }
       
@@ -697,6 +748,14 @@ export async function sendEmailWithAttachments(template: EmailTemplate, attachme
 
     if (error) {
       console.error('Resend API error (with attachments):', error)
+      if (isAdminEmail) {
+        logAdminEmailOperation('Send Failed (with Attachments)', {
+          subject: template.subject,
+          attachmentCount: attachments?.length || 0,
+          error: error.message,
+          errorCode: error.name
+        })
+      }
       throw new Error(`Failed to send email: ${error.message}`)
     }
 
@@ -706,9 +765,20 @@ export async function sendEmailWithAttachments(template: EmailTemplate, attachme
       subject: template.subject,
       attachmentCount: emailData.attachments?.length || 0
     })
+    
+    if (isAdminEmail) {
+      logAdminEmailOperation('Send Success (with Attachments)', {
+        subject: template.subject,
+        emailId: data?.id,
+        attachmentCount: emailData.attachments?.length || 0,
+        emailType: options?.emailType
+      })
+    }
 
     return data
   } catch (error) {
+    const isAdminEmail = template.to.includes(ADMIN_EMAIL)
+    
     console.error('Email sending with attachments failed:', {
       error: error instanceof Error ? error.message : 'Unknown error',
       to: template.to,
@@ -716,18 +786,39 @@ export async function sendEmailWithAttachments(template: EmailTemplate, attachme
       fromEmail: FROM_EMAIL,
       attachmentCount: attachments?.length || 0
     })
+    
+    if (isAdminEmail) {
+      logAdminEmailOperation('Send Exception (with Attachments)', {
+        subject: template.subject,
+        attachmentCount: attachments?.length || 0,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      })
+    }
+    
     throw error
   }
 }
 
 export async function sendEmail(template: EmailTemplate, options?: { preventDuplicates?: boolean, emailType?: 'form_submission' | 'payment_confirmation' }) {
   try {
+    // Check if this is an admin email
+    const isAdminEmail = template.to.includes(ADMIN_EMAIL)
+    
+    if (isAdminEmail) {
+      logAdminEmailOperation('Attempting Send', {
+        subject: template.subject,
+        emailType: options?.emailType,
+        preventDuplicates: options?.preventDuplicates
+      })
+    }
+    
     console.log('Attempting to send email:', {
       to: template.to,
       subject: template.subject,
       fromEmail: FROM_EMAIL,
       preventDuplicates: options?.preventDuplicates,
-      emailType: options?.emailType
+      emailType: options?.emailType,
+      isAdminEmail: isAdminEmail
     })
 
     // Duplicate prevention logic
@@ -736,6 +827,12 @@ export async function sendEmail(template: EmailTemplate, options?: { preventDupl
       
       if (isDuplicateEmail(emailKey)) {
         console.log(`Skipping duplicate email: ${template.subject} to ${template.to[0]}`)
+        if (isAdminEmail) {
+          logAdminEmailOperation('Duplicate Skipped', {
+            subject: template.subject,
+            reason: 'Duplicate prevention triggered'
+          })
+        }
         return { duplicate: true, skipped: true }
       }
       
@@ -760,6 +857,13 @@ export async function sendEmail(template: EmailTemplate, options?: { preventDupl
 
     if (error) {
       console.error('Resend API error:', error)
+      if (isAdminEmail) {
+        logAdminEmailOperation('Send Failed', {
+          subject: template.subject,
+          error: error.message,
+          errorCode: error.name
+        })
+      }
       throw new Error(`Failed to send email: ${error.message}`)
     }
 
@@ -768,15 +872,33 @@ export async function sendEmail(template: EmailTemplate, options?: { preventDupl
       to: template.to,
       subject: template.subject
     })
+    
+    if (isAdminEmail) {
+      logAdminEmailOperation('Send Success', {
+        subject: template.subject,
+        emailId: data?.id,
+        emailType: options?.emailType
+      })
+    }
 
     return data
   } catch (error) {
+    const isAdminEmail = template.to.includes(ADMIN_EMAIL)
+    
     console.error('Email sending failed:', {
       error: error instanceof Error ? error.message : 'Unknown error',
       to: template.to,
       subject: template.subject,
       fromEmail: FROM_EMAIL
     })
+    
+    if (isAdminEmail) {
+      logAdminEmailOperation('Send Exception', {
+        subject: template.subject,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      })
+    }
+    
     throw error
   }
 }
