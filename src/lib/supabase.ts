@@ -12,7 +12,7 @@ if (typeof window !== 'undefined') {
 }
 
 // Create Supabase client with error handling
-let supabase: any
+let supabase
 try {
   supabase = createClient(supabaseUrl, supabaseAnonKey)
   if (typeof window !== 'undefined') {
