@@ -1,6 +1,6 @@
 import { GetServerSideProps } from 'next'
 import Layout from '@/components/layout/Layout'
-import ClientOnboardingForm from '@/components/forms/ClientOnboardingForm'
+import EnhancedOnboardingForm from '@/components/forms/EnhancedOnboardingForm'
 import { PricingTier } from '@/types'
 
 interface StartPageProps {
@@ -25,7 +25,7 @@ export default function StartPage({ initialPlan }: StartPageProps) {
         </div>
         
         <div className="relative z-10">
-          <ClientOnboardingForm initialPlan={initialPlan} />
+          <EnhancedOnboardingForm initialPlan={initialPlan} />
         </div>
         
         {/* Floating Elements */}
