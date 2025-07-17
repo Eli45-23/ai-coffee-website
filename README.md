@@ -132,9 +132,9 @@ Update the URLs in `src/lib/stripe.ts`:
 
 ```typescript
 export const STRIPE_PRICING_LINKS = {
-  starter: 'your_starter_checkout_url',
-  pro: 'your_pro_checkout_url',
-  pro_plus: 'your_pro_plus_checkout_url',
+  starter: 'https://buy.stripe.com/fZu5kEaZ4dQqbKUfNZ8Vi00',
+  pro: 'https://buy.stripe.com/3cI5kE7MS13EcOY6dp8Vi01',
+  pro_plus: 'https://buy.stripe.com/28EeVe9V06nY4is59l8Vi02',
 }
 ```
 

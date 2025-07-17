@@ -11,15 +11,15 @@ export const getStripeInstance = () => {
 }
 
 export const STRIPE_PRICING_LINKS = {
-  starter: 'https://buy.stripe.com/9AQbKU5A3dKk4is5kO',
-  pro: 'https://buy.stripe.com/fZe6s24dV8p80NOdQQ',
+  starter: 'https://buy.stripe.com/fZu5kEaZ4dQqbKUfNZ8Vi00',
+  pro: 'https://buy.stripe.com/3cI5kE7MS13EcOY6dp8Vi01',
   pro_plus: 'https://buy.stripe.com/28EeVe9V06nY4is59l8Vi02',
 } as const
 
-// Legacy links (keep for backward compatibility)
+// Legacy/test links (keep for backward compatibility)
 export const LEGACY_STRIPE_PRICING_LINKS = {
-  starter: 'https://buy.stripe.com/fZu5kEaZ4dQqbKUfNZ8Vi00',
-  pro: 'https://buy.stripe.com/3cI5kE7MS13EcOY6dp8Vi01',
+  starter: 'https://buy.stripe.com/9AQbKU5A3dKk4is5kO',
+  pro: 'https://buy.stripe.com/fZe6s24dV8p80NOdQQ',
   pro_plus: 'https://buy.stripe.com/28EeVe9V06nY4is59l8Vi02',
 } as const
 

@@ -11,7 +11,7 @@ import {
   PICKUP_OPTIONS,
   ClientOnboardingSubmission
 } from '@/types'
-import { STRIPE_PRICING_LINKS } from '@/lib/stripe'
+import { getStripeCheckoutUrl } from '@/lib/stripe'
 import { supabaseClient, uploadFileToSupabaseStorage, uploadMultipleFilesToStorage } from '@/lib/supabase-client'
 import FormInput from '@/components/ui/FormInput'
 import FormTextarea from '@/components/ui/FormTextarea'
@@ -231,8 +231,8 @@ export default function EnhancedOnboardingForm({ initialPlan = 'starter' }: Enha
         // Don't fail the entire submission if email fails
       }
 
-      // Step 7: Redirect to Stripe checkout
-      const checkoutUrl = STRIPE_PRICING_LINKS[data.plan]
+      // Step 7: Redirect to Stripe checkout with submission ID for tracking
+      const checkoutUrl = getStripeCheckoutUrl(data.plan, submission.id)
       if (checkoutUrl) {
         window.location.href = checkoutUrl
       } else {
