@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import formidable from 'formidable'
 import { enhancedOnboardingFormSchema } from '@/lib/validations'
-import { uploadFileToSupabase, uploadMultipleFiles, createClientOnboardingSubmission, ClientOnboardingSubmission } from '@/lib/supabase'
+import { uploadFileToSupabase, uploadMultipleFiles, createClientOnboardingSubmission } from '@/lib/supabase'
+import { ClientOnboardingSubmission } from '@/types'
 import { sendEmail, sendEmailWithAttachments, createEnhancedWelcomeEmail, createEnhancedAdminNotificationEmail, EnhancedFormSubmission } from '@/lib/resend'
 
 export const config = {
