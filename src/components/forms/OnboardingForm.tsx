@@ -17,8 +17,6 @@ export default function OnboardingForm({ initialPlan = 'starter' }: OnboardingFo
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
-  // Debug logging
-  console.log('OnboardingForm rendered with initialPlan:', initialPlan)
 
   const {
     register,
