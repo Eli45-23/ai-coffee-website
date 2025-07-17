@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import formidable from 'formidable'
 import { enhancedOnboardingFormSchema } from '@/lib/validations'
-import { uploadFileToSupabase, uploadMultipleFiles, createEnhancedOnboardingSubmission, EnhancedOnboardingSubmission } from '@/lib/supabase'
+import { uploadFileToSupabase, uploadMultipleFiles, createClientOnboardingSubmission, ClientOnboardingSubmission } from '@/lib/supabase'
 import { sendEmail, sendEmailWithAttachments, createEnhancedWelcomeEmail, createEnhancedAdminNotificationEmail, EnhancedFormSubmission } from '@/lib/resend'
 
 export const config = {
@@ -120,40 +120,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Save enhanced form submission to database
-    const enhancedDbSubmission: Omit<EnhancedOnboardingSubmission, 'id' | 'created_at'> = {
+    const enhancedDbSubmission: Omit<ClientOnboardingSubmission, 'id' | 'created_at'> = {
       business_name: validatedData.business_name,
       email: validatedData.email,
       instagram_handle: validatedData.instagram_handle,
       other_platforms: validatedData.other_platforms,
-      business_type: validatedData.business_type,
-      business_type_other: validatedData.business_type_other,
+      business_type: validatedData.business_type + (validatedData.business_type_other ? ` - ${validatedData.business_type_other}` : ''),
       product_categories: validatedData.product_categories,
       product_categories_other: validatedData.product_categories_other,
-      customer_questions: validatedData.customer_questions,
-      customer_questions_other: validatedData.customer_questions_other,
-      delivery_pickup: validatedData.delivery_pickup,
-      delivery_options: validatedData.delivery_options,
-      delivery_options_other: validatedData.delivery_options_other,
-      pickup_options: validatedData.pickup_options,
-      pickup_options_other: validatedData.pickup_options_other,
-      delivery_notes: validatedData.delivery_notes,
+      common_questions: validatedData.customer_questions,
+      common_questions_other: validatedData.customer_questions_other,
+      delivery_option: validatedData.delivery_pickup,
       menu_file_url: menuFileUrl,
+      menu_text: validatedData.menu_description,
       additional_docs_urls: additionalDocsUrls,
-      menu_description: validatedData.menu_description,
       plan: validatedData.plan,
       credential_sharing: validatedData.credential_sharing,
-      credentials_direct: validatedData.credentials_direct,
       has_faqs: validatedData.has_faqs,
       faq_file_url: faqFileUrl,
-      faq_content: validatedData.faq_content,
       consent_checkbox: validatedData.consent_checkbox,
       source: 'enhanced_onboarding_form',
       payment_status: 'pending'
     }
 
-    let savedSubmission: EnhancedOnboardingSubmission
+    let savedSubmission: ClientOnboardingSubmission
     try {
-      savedSubmission = await createEnhancedOnboardingSubmission(enhancedDbSubmission)
+      savedSubmission = await createClientOnboardingSubmission(enhancedDbSubmission)
     } catch (dbError) {
       console.error('Failed to save enhanced onboarding submission to database:', dbError)
       return res.status(500).json({ 

@@ -4,8 +4,8 @@ import { getStripeInstance } from '@/lib/stripe'
 import { 
   updateFormSubmission, 
   getFormSubmissionByStripeSession, 
-  updateEnhancedOnboardingSubmission, 
-  getEnhancedOnboardingSubmissionByStripeSession 
+  updateClientOnboardingSubmission, 
+  getClientOnboardingSubmissionByStripeSession 
 } from '@/lib/supabase'
 import { sendEmail, createPaymentConfirmationClientEmail, createPaymentConfirmationAdminEmail } from '@/lib/resend'
 
@@ -44,17 +44,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             let submission: any = null // eslint-disable-line @typescript-eslint/no-explicit-any
             let isEnhancedOnboarding = false
 
-            // Try to update enhanced onboarding submission first
+            // Try to update client onboarding submission first
             try {
-              await updateEnhancedOnboardingSubmission(submissionId, {
+              await updateClientOnboardingSubmission(submissionId, {
                 payment_status: 'completed',
                 stripe_session_id: session.id,
               })
               
               // If successful, get the updated submission
-              submission = await getEnhancedOnboardingSubmissionByStripeSession(session.id)
+              submission = await getClientOnboardingSubmissionByStripeSession(session.id)
               isEnhancedOnboarding = true
-              console.log(`Enhanced onboarding payment completed for submission ${submissionId}`)
+              console.log(`Client onboarding payment completed for submission ${submissionId}`)
             } catch {
               // If not found in enhanced onboarding, try legacy form submissions
               try {
@@ -67,7 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 submission = await getFormSubmissionByStripeSession(session.id)
                 console.log(`Legacy form payment completed for submission ${submissionId}`)
               } catch (legacyError) {
-                console.error('Failed to find submission in either enhanced or legacy tables:', legacyError)
+                console.error('Failed to find submission in either client onboarding or legacy tables:', legacyError)
                 return res.status(400).json({ error: 'Submission not found' })
               }
             }

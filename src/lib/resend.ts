@@ -29,7 +29,7 @@ export function createWelcomeEmail(submission: FormSubmission): EmailTemplate {
       <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
           <!-- Header -->
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center;">
+          <div style="background: linear-gradient(135deg, #10F2B0 0%, #00D0FF 100%); padding: 40px 20px; text-align: center;">
             <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">Welcome to AIChatFlows!</h1>
             <p style="color: #e2e8f0; margin: 16px 0 0 0; font-size: 18px;">Thank you for submitting your onboarding form</p>
           </div>
@@ -209,7 +209,7 @@ export function createEnhancedAdminNotificationEmail(submission: EnhancedFormSub
 
   return {
     to: [ADMIN_EMAIL],
-    subject: `📝 New Client Onboarding Form Submitted – ${submission.business_name}`,
+    subject: `🆕 New Client Onboarding Form Submitted – ${submission.business_name}`,
     html: `
       <!DOCTYPE html>
       <html>
@@ -221,7 +221,7 @@ export function createEnhancedAdminNotificationEmail(submission: EnhancedFormSub
       <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc;">
         <div style="max-width: 700px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
           <!-- Header -->
-          <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 30px 20px; text-align: center;">
+          <div style="background: linear-gradient(135deg, #10F2B0 0%, #00D0FF 100%); padding: 30px 20px; text-align: center;">
             <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">📝 New Client Onboarding Form</h1>
             <p style="color: #fef3c7; margin: 12px 0 0 0; font-size: 16px;">${submission.business_name}</p>
           </div>
@@ -231,35 +231,35 @@ export function createEnhancedAdminNotificationEmail(submission: EnhancedFormSub
             
             <!-- Business Info Section -->
             <div style="margin-bottom: 32px;">
-              <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #3b82f6; padding-bottom: 8px;">🔹 Business Info</h2>
-              <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6;">
-                <p style="margin: 0 0 8px 0; color: #374151;"><strong>Name:</strong> ${submission.business_name}</p>
-                <p style="margin: 0 0 8px 0; color: #374151;"><strong>Instagram:</strong> ${submission.instagram_handle}</p>
-                ${submission.other_platforms ? `<p style="margin: 0 0 8px 0; color: #374151;"><strong>Other Platforms:</strong> ${submission.other_platforms}</p>` : ''}
-                <p style="margin: 0; color: #374151;"><strong>Type:</strong> ${submission.business_type}${submission.business_type_other ? ` (${submission.business_type_other})` : ''}</p>
+              <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #10F2B0; padding-bottom: 8px;">▪️ Business Info</h2>
+              <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border-left: 4px solid #10F2B0;">
+                <p style="margin: 0 0 8px 0; color: #374151;">- <strong>Name:</strong> ${submission.business_name}</p>
+                <p style="margin: 0 0 8px 0; color: #374151;">- <strong>Instagram:</strong> ${submission.instagram_handle}</p>
+                ${submission.other_platforms ? `<p style="margin: 0 0 8px 0; color: #374151;">- <strong>Other Platforms:</strong> ${submission.other_platforms}</p>` : ''}
+                <p style="margin: 0; color: #374151;">- <strong>Type:</strong> ${submission.business_type}${submission.business_type_other ? ` (${submission.business_type_other})` : ''}</p>
               </div>
             </div>
 
             <!-- Product Categories Section -->
             <div style="margin-bottom: 32px;">
-              <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #10b981; padding-bottom: 8px;">🔹 Product Categories</h2>
-              <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981;">
+              <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #10F2B0; padding-bottom: 8px;">▪️ Product Categories</h2>
+              <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border-left: 4px solid #10F2B0;">
                 <p style="margin: 0; color: #374151;">${productCategoriesText}</p>
               </div>
             </div>
 
             <!-- Customer Questions Section -->
             <div style="margin-bottom: 32px;">
-              <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #8b5cf6; padding-bottom: 8px;">🔹 Customer Questions</h2>
-              <div style="background: #faf5ff; padding: 20px; border-radius: 8px; border-left: 4px solid #8b5cf6;">
+              <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #00D0FF; padding-bottom: 8px;">▪️ Customer Questions</h2>
+              <div style="background: #faf5ff; padding: 20px; border-radius: 8px; border-left: 4px solid #00D0FF;">
                 <p style="margin: 0; color: #374151;">${customerQuestionsText}</p>
               </div>
             </div>
 
             <!-- Delivery Method Section -->
             <div style="margin-bottom: 32px;">
-              <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #f59e0b; padding-bottom: 8px;">🔹 Delivery Method</h2>
-              <div style="background: #fffbeb; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+              <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #10F2B0; padding-bottom: 8px;">▪️ Delivery Method</h2>
+              <div style="background: #fffbeb; padding: 20px; border-radius: 8px; border-left: 4px solid #10F2B0;">
                 <p style="margin: 0 0 8px 0; color: #374151;"><strong>Method:</strong> ${submission.delivery_pickup.charAt(0).toUpperCase() + submission.delivery_pickup.slice(1)}</p>
                 ${submission.delivery_pickup === 'delivery' || submission.delivery_pickup === 'both' ? `<p style="margin: 0 0 8px 0; color: #374151;"><strong>Delivery Options:</strong> ${deliveryOptionsText}</p>` : ''}
                 ${submission.delivery_pickup === 'pickup' || submission.delivery_pickup === 'both' ? `<p style="margin: 0 0 8px 0; color: #374151;"><strong>Pickup Options:</strong> ${pickupOptionsText}</p>` : ''}
@@ -269,8 +269,8 @@ export function createEnhancedAdminNotificationEmail(submission: EnhancedFormSub
 
             <!-- Menu & Docs Section -->
             <div style="margin-bottom: 32px;">
-              <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #ef4444; padding-bottom: 8px;">🔹 Menu & Docs</h2>
-              <div style="background: #fef2f2; padding: 20px; border-radius: 8px; border-left: 4px solid #ef4444;">
+              <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #00D0FF; padding-bottom: 8px;">▪️ Menu & Docs</h2>
+              <div style="background: #fef2f2; padding: 20px; border-radius: 8px; border-left: 4px solid #00D0FF;">
                 ${submission.menuFileUrl ? '<p style="margin: 0 0 8px 0; color: #374151;"><strong>Menu uploaded:</strong> ✅</p>' : '<p style="margin: 0 0 8px 0; color: #374151;"><strong>Menu uploaded:</strong> ❌</p>'}
                 ${submission.menu_description ? `<p style="margin: 0 0 8px 0; color: #374151;"><strong>Additional Notes:</strong> "${submission.menu_description}"</p>` : ''}
                 ${attachedFiles.length ? `<p style="margin: 0; color: #374151;"><strong>Files:</strong> ${attachedFiles.join(', ')}</p>` : ''}
@@ -279,16 +279,16 @@ export function createEnhancedAdminNotificationEmail(submission: EnhancedFormSub
 
             <!-- Plan Selected Section -->
             <div style="margin-bottom: 32px;">
-              <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #06b6d4; padding-bottom: 8px;">🔹 Plan Selected</h2>
-              <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; border-left: 4px solid #06b6d4;">
+              <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #10F2B0; padding-bottom: 8px;">▪️ Plan Selected</h2>
+              <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; border-left: 4px solid #10F2B0;">
                 <p style="margin: 0; color: #374151; font-size: 16px; font-weight: 600;">${planNames[submission.plan]}</p>
               </div>
             </div>
 
             <!-- Credential Sharing Section -->
             <div style="margin-bottom: 32px;">
-              <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #84cc16; padding-bottom: 8px;">🔹 Credential Sharing</h2>
-              <div style="background: #f7fee7; padding: 20px; border-radius: 8px; border-left: 4px solid #84cc16;">
+              <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #00D0FF; padding-bottom: 8px;">▪️ Credential Sharing</h2>
+              <div style="background: #f7fee7; padding: 20px; border-radius: 8px; border-left: 4px solid #00D0FF;">
                 <p style="margin: 0 0 8px 0; color: #374151;"><strong>Option Chosen:</strong> ${submission.credential_sharing === 'sendsecurely' ? 'SendSecretly.ly' : submission.credential_sharing === 'call' ? 'Schedule Call' : 'Direct Submission'}</p>
                 ${submission.credentials_direct ? `<p style="margin: 0; color: #374151;"><strong>Credentials:</strong> [Provided]</p>` : ''}
               </div>
@@ -296,8 +296,8 @@ export function createEnhancedAdminNotificationEmail(submission: EnhancedFormSub
 
             <!-- FAQs Section -->
             <div style="margin-bottom: 32px;">
-              <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #ec4899; padding-bottom: 8px;">🔹 FAQs</h2>
-              <div style="background: #fdf2f8; padding: 20px; border-radius: 8px; border-left: 4px solid #ec4899;">
+              <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #10F2B0; padding-bottom: 8px;">▪️ FAQs</h2>
+              <div style="background: #fdf2f8; padding: 20px; border-radius: 8px; border-left: 4px solid #10F2B0;">
                 ${submission.faqFileUrl ? '<p style="margin: 0 0 8px 0; color: #374151;"><strong>File uploaded:</strong> ✅</p>' : '<p style="margin: 0 0 8px 0; color: #374151;"><strong>File uploaded:</strong> ❌</p>'}
                 ${submission.faq_content ? `<p style="margin: 0; color: #374151;"><strong>Text:</strong> "${submission.faq_content.substring(0, 100)}${submission.faq_content.length > 100 ? '...' : ''}"</p>` : ''}
               </div>
@@ -305,8 +305,8 @@ export function createEnhancedAdminNotificationEmail(submission: EnhancedFormSub
 
             <!-- Contact Email Section -->
             <div style="margin-bottom: 32px;">
-              <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #6366f1; padding-bottom: 8px;">🔹 Contact Email</h2>
-              <div style="background: #eef2ff; padding: 20px; border-radius: 8px; border-left: 4px solid #6366f1;">
+              <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #00D0FF; padding-bottom: 8px;">▪️ Contact Email</h2>
+              <div style="background: #eef2ff; padding: 20px; border-radius: 8px; border-left: 4px solid #00D0FF;">
                 <p style="margin: 0; color: #374151; font-weight: 600;">${submission.email}</p>
               </div>
             </div>
@@ -345,7 +345,7 @@ export function createEnhancedWelcomeEmail(submission: EnhancedFormSubmission): 
       <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
           <!-- Header -->
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center;">
+          <div style="background: linear-gradient(135deg, #10F2B0 0%, #00D0FF 100%); padding: 40px 20px; text-align: center;">
             <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">Welcome to AIChatFlows!</h1>
             <p style="color: #e2e8f0; margin: 16px 0 0 0; font-size: 18px;">Thank you for submitting your onboarding form</p>
           </div>
@@ -439,7 +439,7 @@ export function createPaymentConfirmationClientEmail(submission: EnhancedFormSub
       <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
           <!-- Header -->
-          <div style="background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 40px 20px; text-align: center;">
+          <div style="background: linear-gradient(135deg, #10F2B0 0%, #00D0FF 100%); padding: 40px 20px; text-align: center;">
             <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">Payment Confirmed! 🎉</h1>
             <p style="color: #d1fae5; margin: 16px 0 0 0; font-size: 18px;">Your AIChatFlows account is now active</p>
           </div>
@@ -448,19 +448,22 @@ export function createPaymentConfirmationClientEmail(submission: EnhancedFormSub
           <div style="padding: 40px 20px;">
             
             <!-- Receipt Details -->
-            <div style="background: #f0f9ff; border: 1px solid #c7d2fe; padding: 24px; border-radius: 8px; margin: 32px 0;">
-              <h3 style="color: #1e40af; margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">📋 Payment Details</h3>
+            <div style="background: #f0fdf4; border: 1px solid #10F2B0; padding: 24px; border-radius: 8px; margin: 32px 0;">
+              <h3 style="color: #047857; margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">🧾 Your Receipt</h3>
               <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 16px; margin-bottom: 16px;">
-                <p style="margin: 0 0 8px 0; color: #374151;"><strong>Business:</strong> ${businessName}</p>
-                <p style="margin: 0 0 8px 0; color: #374151;"><strong>Plan:</strong> ${planNames[submission.plan]}</p>
-                <p style="margin: 0 0 8px 0; color: #374151;"><strong>Amount:</strong> ${planPrices[submission.plan]}/month</p>
-                <p style="margin: 0; color: #374151;"><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+                <p style="margin: 0 0 8px 0; color: #374151;">- <strong>Business:</strong> ${businessName}</p>
+                <p style="margin: 0 0 8px 0; color: #374151;">- <strong>Plan:</strong> ${planNames[submission.plan]}</p>
+                <p style="margin: 0 0 8px 0; color: #374151;">- <strong>Amount Charged:</strong> ${planPrices[submission.plan]}/month</p>
+                <p style="margin: 0 0 8px 0; color: #374151;">- <strong>Payment Date:</strong> ${new Date().toLocaleDateString()}</p>
+                <p style="margin: 0 0 8px 0; color: #374151;">- <strong>Payment Method:</strong> ${Array.isArray(stripeData?.payment_method_types) ? stripeData.payment_method_types.join(', ') : 'Card'}</p>
+                <p style="margin: 0; color: #374151;">- <strong>Status:</strong> ✅ Paid</p>
               </div>
               ${stripeData?.id ? `<p style="margin: 0; color: #6b7280; font-size: 14px;"><strong>Transaction ID:</strong> ${stripeData.id}</p>` : ''}
+              ${stripeData?.currency && typeof stripeData.currency === 'string' ? `<p style="margin: 8px 0 0 0; color: #6b7280; font-size: 14px;"><strong>Currency:</strong> ${stripeData.currency.toUpperCase()}</p>` : ''}
             </div>
 
             <!-- What's Next -->
-            <div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 20px; margin: 32px 0; border-radius: 0 8px 8px 0;">
+            <div style="background: #ecfdf5; border-left: 4px solid #10F2B0; padding: 20px; margin: 32px 0; border-radius: 0 8px 8px 0;">
               <h3 style="color: #059669; margin: 0 0 12px 0; font-size: 18px; font-weight: 600;">🚀 What's Next?</h3>
               <ul style="color: #065f46; margin: 0; padding-left: 20px; line-height: 1.6;">
                 <li>Our team is preparing your account setup</li>
@@ -470,12 +473,17 @@ export function createPaymentConfirmationClientEmail(submission: EnhancedFormSub
               </ul>
             </div>
             
-            <div style="text-align: center; margin: 32px 0;">
-              <p style="color: #6b7280; margin: 0; font-size: 16px;">
-                Questions about your payment or account?
+            <!-- Support Contact -->
+            <div style="background: #f0f9ff; border: 1px solid #00D0FF; padding: 20px; border-radius: 8px; margin: 32px 0; text-align: center;">
+              <h3 style="color: #0369a1; margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">💬 Need Support?</h3>
+              <p style="color: #6b7280; margin: 0 0 8px 0; font-size: 14px;">
+                Questions about your payment, account setup, or service?
               </p>
-              <p style="color: #3b82f6; margin: 8px 0 0 0; font-size: 16px; font-weight: 600;">
+              <p style="color: #0369a1; margin: 0; font-size: 16px; font-weight: 600;">
                 📧 ${ADMIN_EMAIL}
+              </p>
+              <p style="color: #6b7280; margin: 8px 0 0 0; font-size: 12px;">
+                We typically respond within 24 hours
               </p>
             </div>
           </div>
@@ -524,7 +532,7 @@ export function createPaymentConfirmationAdminEmail(submission: EnhancedFormSubm
       <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
           <!-- Header -->
-          <div style="background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 30px 20px; text-align: center;">
+          <div style="background: linear-gradient(135deg, #10F2B0 0%, #00D0FF 100%); padding: 30px 20px; text-align: center;">
             <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">✅ Payment Received</h1>
             <p style="color: #d1fae5; margin: 12px 0 0 0; font-size: 16px;">${businessName}</p>
           </div>
