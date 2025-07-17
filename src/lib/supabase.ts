@@ -3,6 +3,12 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
+// Debug logging for production
+if (typeof window !== 'undefined') {
+  console.log('Supabase URL:', supabaseUrl ? 'Present' : 'Missing')
+  console.log('Supabase Anon Key:', supabaseAnonKey ? 'Present' : 'Missing')
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export interface FormSubmission {
