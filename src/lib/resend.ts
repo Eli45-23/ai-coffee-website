@@ -67,7 +67,7 @@ function maskEmail(email: string): string {
 }
 
 // Helper function to log admin email operations
-function logAdminEmailOperation(operation: string, details: any) {
+function logAdminEmailOperation(operation: string, details: Record<string, unknown>) {
   console.log(`Admin Email ${operation}:`, {
     ...details,
     adminEmail: maskEmail(ADMIN_EMAIL),
