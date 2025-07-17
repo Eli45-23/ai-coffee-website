@@ -61,35 +61,46 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
   }
 
-  // Now try the Supabase client
+  // Check if client_onboarding table exists
   try {
-    console.log('Testing Supabase client...')
+    console.log('Testing client_onboarding table access...')
     const { data, error } = await supabase
       .from('client_onboarding')
-      .select('count')
+      .select('*')
       .limit(1)
 
     if (error) {
-      console.error('Supabase query error:', error)
+      console.error('client_onboarding table error:', error)
+      
+      // Try to check what tables exist
+      console.log('Checking available tables...')
+      const { data: tablesData, error: tablesError } = await supabase
+        .from('information_schema.tables')
+        .select('table_name')
+        .eq('table_schema', 'public')
+      
+      if (tablesError) {
+        console.error('Cannot check tables:', tablesError)
+      } else {
+        console.log('Available tables:', tablesData)
+      }
+      
       return res.status(500).json({ 
         success: false, 
-        error: error.message,
+        error: error.message || 'Unknown error',
         details: error,
-        env: {
-          urlSet: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-          keySet: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        }
+        tables: tablesData,
+        suggestion: 'Check if client_onboarding table exists in Supabase'
       })
     }
 
+    console.log('client_onboarding table accessible, sample data:', data)
+    
     return res.status(200).json({ 
       success: true, 
-      message: 'Supabase connection successful',
+      message: 'Supabase connection and table access successful',
       data,
-      env: {
-        urlSet: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-        keySet: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      }
+      tableExists: true
     })
   } catch (err) {
     console.error('Supabase client error:', err)
@@ -97,10 +108,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       success: false, 
       error: err instanceof Error ? err.message : 'Unknown error',
       details: err,
-      env: {
-        urlSet: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-        keySet: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      }
+      suggestion: 'Check Supabase configuration and table structure'
     })
   }
 }
