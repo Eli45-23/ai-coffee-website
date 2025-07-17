@@ -1,7 +1,6 @@
 import type { NextPage } from 'next'
 import Link from 'next/link'
 import Layout from '@/components/layout/Layout'
-import Button from '@/components/ui/Button'
 import { PricingPlan } from '@/types'
 import { STRIPE_PRICES } from '@/lib/stripe'
 import { formatPrice } from '@/lib/stripe'
