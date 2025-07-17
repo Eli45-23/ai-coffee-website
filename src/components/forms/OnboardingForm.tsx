@@ -17,18 +17,29 @@ export default function OnboardingForm({ initialPlan = 'starter' }: OnboardingFo
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
+  // Debug logging
+  console.log('OnboardingForm rendered with initialPlan:', initialPlan)
+
+  let form
+  try {
+    form = useForm<OnboardingFormData>({
+      resolver: zodResolver(onboardingFormSchema),
+      defaultValues: {
+        plan: initialPlan,
+        login_sharing_preference: 'secure_site',
+      },
+    })
+  } catch (error) {
+    console.error('Error initializing form:', error)
+    return <div>Error loading form. Please refresh the page.</div>
+  }
+
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<OnboardingFormData>({
-    resolver: zodResolver(onboardingFormSchema),
-    defaultValues: {
-      plan: initialPlan,
-      login_sharing_preference: 'secure_site',
-    },
-  })
+  } = form
 
   const watchedPlan = watch('plan')
 
