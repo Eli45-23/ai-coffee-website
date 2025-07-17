@@ -82,7 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json({
       success: true,
       message: 'Test email sent successfully',
-      emailId: result?.id,
+      emailId: result && 'id' in result ? result.id : null,
       to: to,
       subject: subject
     })
