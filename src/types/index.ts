@@ -144,3 +144,136 @@ export const CREDENTIAL_SHARING_OPTIONS = [
   { value: 'sendsecurely', label: 'Use SendSecure.ly' },
   { value: 'call', label: 'Schedule onboarding call' }
 ]
+
+// Enhanced Onboarding Form Types
+export interface EnhancedOnboardingFormData {
+  // Business Info
+  business_name: string
+  instagram_handle: string
+  other_platforms?: string
+  business_type: string
+  business_type_other?: string
+  
+  // Dynamic Product Categories
+  product_categories: string[]
+  product_categories_other?: string
+  
+  // Customer Questions
+  customer_questions: string[]
+  customer_questions_other?: string
+  
+  // Delivery/Pickup
+  delivery_pickup: 'delivery' | 'pickup' | 'both' | 'neither'
+  delivery_options?: string[]
+  delivery_options_other?: string
+  pickup_options?: string[]
+  pickup_options_other?: string
+  delivery_notes?: string
+  
+  // Menu & Documentation
+  menu_file?: File
+  additional_docs?: File[]
+  menu_description?: string
+  
+  // Plan Selection
+  plan: 'starter' | 'pro' | 'pro_plus'
+  
+  // Credential Sharing
+  credential_sharing: 'direct' | 'sendsecurely' | 'call'
+  credentials_direct?: string
+  
+  // FAQ Upload
+  has_faqs: 'yes' | 'no'
+  faq_file?: File
+  faq_content?: string
+  
+  // Contact & Consent
+  email: string
+  consent_checkbox: boolean
+}
+
+// Business Types with Associated Categories
+export interface BusinessTypeConfig {
+  label: string
+  categories: string[]
+}
+
+export const BUSINESS_TYPES: Record<string, BusinessTypeConfig> = {
+  coffee_shop: {
+    label: 'Coffee Shop',
+    categories: ['Espresso Drinks', 'Cold Brew', 'Baked Goods', 'Breakfast Items', 'Sandwiches', 'Pastries']
+  },
+  deli: {
+    label: 'Deli',
+    categories: ['Sandwiches', 'Salads', 'Soups', 'Hot Foods', 'Cold Cuts', 'Sides']
+  },
+  pizzeria: {
+    label: 'Pizzeria',
+    categories: ['Pizza', 'Calzones', 'Wings', 'Salads', 'Pasta', 'Appetizers']
+  },
+  ice_cream_shop: {
+    label: 'Ice Cream Shop',
+    categories: ['Ice Cream', 'Frozen Yogurt', 'Milkshakes', 'Sundaes', 'Cakes', 'Toppings']
+  },
+  sandwich_shop: {
+    label: 'Sandwich Shop',
+    categories: ['Hot Sandwiches', 'Cold Sandwiches', 'Wraps', 'Salads', 'Soups', 'Sides']
+  },
+  juice_bar: {
+    label: 'Juice Bar',
+    categories: ['Fresh Juices', 'Smoothies', 'Bowls', 'Shots', 'Cleanses', 'Snacks']
+  },
+  restaurant: {
+    label: 'Restaurant',
+    categories: ['Appetizers', 'Entrees', 'Desserts', 'Beverages', 'Wine', 'Cocktails']
+  },
+  food_truck: {
+    label: 'Food Truck',
+    categories: ['Main Items', 'Sides', 'Beverages', 'Desserts', 'Daily Specials']
+  },
+  bakery: {
+    label: 'Bakery',
+    categories: ['Bread', 'Pastries', 'Cakes', 'Cookies', 'Muffins', 'Custom Orders']
+  },
+  clothing_store: {
+    label: 'Clothing Store',
+    categories: ['Tops', 'Bottoms', 'Dresses', 'Outerwear', 'Accessories', 'Shoes']
+  },
+  beauty_salon: {
+    label: 'Beauty Salon',
+    categories: ['Hair Services', 'Coloring', 'Styling', 'Treatments', 'Extensions', 'Consultations']
+  },
+  nail_spa: {
+    label: 'Nail Spa',
+    categories: ['Manicures', 'Pedicures', 'Nail Art', 'Gel Services', 'Treatments', 'Add-ons']
+  },
+  gym: {
+    label: 'Gym',
+    categories: ['Memberships', 'Personal Training', 'Classes', 'Equipment Access', 'Nutrition', 'Programs']
+  }
+}
+
+// Common Customer Questions
+export const CUSTOMER_QUESTIONS = [
+  'What are your hours?',
+  'Where are you located?',
+  'Do you deliver?',
+  'What\'s on your menu?',
+  'Do you accept reservations?',
+  'Do you have parking?',
+  'Do you accept payment apps?'
+]
+
+// Delivery Options
+export const DELIVERY_OPTIONS = [
+  'Uber Eats',
+  'DoorDash',
+  'Grubhub',
+  'In-house delivery'
+]
+
+// Pickup Options
+export const PICKUP_OPTIONS = [
+  'Curbside Pickup',
+  'Walk-in Pickup'
+]
