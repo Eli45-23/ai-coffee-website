@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { buffer } from 'micro'
-import { verifyStripeWebhook } from '@/lib/stripe'
+import { getStripeInstance } from '@/lib/stripe'
 import { updateFormSubmission, getFormSubmissionByStripeSession } from '@/lib/supabase'
 import { sendEmail, createPaymentConfirmationEmail, createAdminNotificationEmail } from '@/lib/resend'
 
@@ -24,7 +24,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Verify the webhook
-    const event = await verifyStripeWebhook(buf, signature)
+    const stripe = getStripeInstance()
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
+    const event = stripe.webhooks.constructEvent(buf, signature, webhookSecret)
 
     // Handle the event
     switch (event.type) {

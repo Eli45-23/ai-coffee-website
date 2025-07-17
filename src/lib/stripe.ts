@@ -1,10 +1,14 @@
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-06-30.basil',
-})
-
-export { stripe }
+// Only create stripe instance on server side
+export const getStripeInstance = () => {
+  if (typeof window !== 'undefined') {
+    throw new Error('Stripe secret key should not be used on client side')
+  }
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2025-06-30.basil',
+  })
+}
 
 export const STRIPE_PRICING_LINKS = {
   starter: 'https://buy.stripe.com/fZu5kEaZ4dQqbKUfNZ8Vi00',
@@ -35,15 +39,3 @@ export function formatPrice(amount: number, currency: string = 'usd') {
   }).format(amount / 100)
 }
 
-export async function verifyStripeWebhook(
-  payload: string | Buffer,
-  signature: string
-): Promise<Stripe.Event> {
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
-  
-  try {
-    return stripe.webhooks.constructEvent(payload, signature, webhookSecret)
-  } catch (error) {
-    throw new Error(`Webhook signature verification failed: ${error}`)
-  }
-}
