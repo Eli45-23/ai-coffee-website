@@ -217,10 +217,10 @@ const Home: NextPage = () => {
                       border: plan.popular ? 'none' : '1px solid #333333'
                     }}
                     onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = plan.popular ? '#00b894' : '#2a2a2a'
+                      (e.target as HTMLElement).style.backgroundColor = plan.popular ? '#00b894' : '#2a2a2a'
                     }}
                     onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = plan.popular ? '#00d4aa' : '#1a1a1a'
+                      (e.target as HTMLElement).style.backgroundColor = plan.popular ? '#00d4aa' : '#1a1a1a'
                     }}
                   >
                     CHOOSE {plan.name.toUpperCase()}

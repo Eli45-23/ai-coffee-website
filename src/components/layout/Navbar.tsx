@@ -32,7 +32,13 @@ export default function Navbar() {
           </Link>
 
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/#pricing" className="transition-colors" style={{color: '#e5e5e5'}} onMouseEnter={(e) => e.target.style.color = '#ffffff'} onMouseLeave={(e) => e.target.style.color = '#e5e5e5'}>
+            <Link 
+              href="/#pricing" 
+              className="transition-colors" 
+              style={{color: '#e5e5e5'}} 
+              onMouseEnter={(e) => (e.target as HTMLElement).style.color = '#ffffff'} 
+              onMouseLeave={(e) => (e.target as HTMLElement).style.color = '#e5e5e5'}
+            >
               Pricing
             </Link>
             <Link href="/start" className="btn-primary">
