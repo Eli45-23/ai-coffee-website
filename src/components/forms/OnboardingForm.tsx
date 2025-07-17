@@ -20,26 +20,18 @@ export default function OnboardingForm({ initialPlan = 'starter' }: OnboardingFo
   // Debug logging
   console.log('OnboardingForm rendered with initialPlan:', initialPlan)
 
-  let form
-  try {
-    form = useForm<OnboardingFormData>({
-      resolver: zodResolver(onboardingFormSchema),
-      defaultValues: {
-        plan: initialPlan,
-        login_sharing_preference: 'secure_site',
-      },
-    })
-  } catch (error) {
-    console.error('Error initializing form:', error)
-    return <div>Error loading form. Please refresh the page.</div>
-  }
-
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors },
-  } = form
+  } = useForm<OnboardingFormData>({
+    resolver: zodResolver(onboardingFormSchema),
+    defaultValues: {
+      plan: initialPlan,
+      login_sharing_preference: 'secure_site',
+    },
+  })
 
   const watchedPlan = watch('plan')
 
