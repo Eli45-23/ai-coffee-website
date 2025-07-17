@@ -60,6 +60,8 @@ export const clientOnboardingFormSchema = z.object({
   
   // Menu Submission
   menu_text: z.string().optional(),
+  menu_file: z.instanceof(File).optional(),
+  additional_docs: z.array(z.instanceof(File)).optional(),
   
   // Plan Selection
   plan: z.enum(['starter', 'pro', 'pro_plus']),
@@ -69,9 +71,10 @@ export const clientOnboardingFormSchema = z.object({
   
   // FAQ Upload
   has_faqs: z.enum(['yes', 'no']),
+  faq_file: z.instanceof(File).optional(),
   
   // Contact & Consent
-  contact_email: z.string().email('Please enter a valid email address'),
+  email: z.string().email('Please enter a valid email address'),
   consent_checkbox: z.boolean().refine(val => val === true, {
     message: 'You must agree to the terms and conditions'
   })

@@ -2,9 +2,8 @@ import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
-import { clientOnboardingFormSchema } from '@/lib/validations'
+import { clientOnboardingFormSchema, ClientOnboardingFormData } from '@/lib/validations'
 import { 
-  OnboardingFormData, 
   PricingTier, 
   PRODUCT_CATEGORIES, 
   COMMON_QUESTIONS, 
@@ -43,7 +42,7 @@ export default function ClientOnboardingForm({ initialPlan = 'starter' }: Client
     watch,
     setValue,
     formState: { errors },
-  } = useForm<OnboardingFormData>({
+  } = useForm<ClientOnboardingFormData>({
     resolver: zodResolver(clientOnboardingFormSchema),
     defaultValues: {
       plan: initialPlan,
@@ -79,7 +78,7 @@ export default function ClientOnboardingForm({ initialPlan = 'starter' }: Client
     }
   ]
 
-  const onSubmit = async (data: OnboardingFormData) => {
+  const onSubmit = async (data: ClientOnboardingFormData) => {
     setIsSubmitting(true)
 
     try {
@@ -106,7 +105,7 @@ export default function ClientOnboardingForm({ initialPlan = 'starter' }: Client
         formData.append('faq_file', data.faq_file)
       }
       if (data.additional_docs) {
-        data.additional_docs.forEach((file, index) => {
+        data.additional_docs.forEach((file: File, index: number) => {
           formData.append(`additional_docs_${index}`, file)
         })
       }
@@ -405,8 +404,8 @@ export default function ClientOnboardingForm({ initialPlan = 'starter' }: Client
             <FormInput
               label="Email Address"
               type="email"
-              {...register('contact_email')}
-              error={errors.contact_email?.message}
+              {...register('email')}
+              error={errors.email?.message}
               placeholder="your@email.com"
               required
             />

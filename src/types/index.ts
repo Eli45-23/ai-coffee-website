@@ -61,7 +61,7 @@ export interface OnboardingFormData {
   faq_file?: File
   
   // Contact & Consent
-  contact_email: string
+  email: string
   consent_checkbox: boolean
 }
 
@@ -83,7 +83,7 @@ export interface ClientOnboardingSubmission {
   credential_sharing: string
   has_faqs: string
   faq_file_url?: string
-  contact_email: string
+  email: string
   consent_checkbox: boolean
   source: string
   payment_status: 'pending' | 'completed'

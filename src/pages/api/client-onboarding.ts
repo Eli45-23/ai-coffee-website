@@ -47,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       plan: getFieldValue(fields.plan) as 'starter' | 'pro' | 'pro_plus',
       credential_sharing: getFieldValue(fields.credential_sharing) as 'direct' | 'sendsecurely' | 'call',
       has_faqs: getFieldValue(fields.has_faqs) as 'yes' | 'no',
-      contact_email: getFieldValue(fields.contact_email) || '',
+      email: getFieldValue(fields.email) || '',
       consent_checkbox: getFieldValue(fields.consent_checkbox) === 'true',
     }
 
@@ -128,7 +128,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Create a compatible object for legacy email functions
       const emailData = {
         name: submission.business_name,
-        email: submission.contact_email,
+        email: submission.email,
         plan: submission.plan,
         id: submission.id || '',
         source: 'ai-chatflows.com',
@@ -148,7 +148,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Create a compatible object for legacy email functions
       const emailData = {
         name: submission.business_name,
-        email: submission.contact_email,
+        email: submission.email,
         plan: submission.plan,
         id: submission.id || '',
         source: 'ai-chatflows.com',
