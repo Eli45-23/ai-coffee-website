@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import formidable from 'formidable'
 import { enhancedOnboardingFormSchema } from '@/lib/validations'
-import { uploadFileToSupabase, uploadMultipleFiles } from '@/lib/supabase'
-import { sendEmail, createWelcomeEmail } from '@/lib/resend'
+import { uploadFileToSupabase, uploadMultipleFiles, createEnhancedOnboardingSubmission, EnhancedOnboardingSubmission } from '@/lib/supabase'
+import { sendEmail, sendEmailWithAttachments, createEnhancedWelcomeEmail, createEnhancedAdminNotificationEmail, EnhancedFormSubmission } from '@/lib/resend'
 
 export const config = {
   api: {
@@ -119,25 +119,63 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    // For now, we'll use a simple storage approach (could be enhanced to use Supabase)
-    // Since this is just for submission tracking before Stripe redirect
-    const submissionId = Date.now().toString() + Math.random().toString(36).substring(2)
+    // Save enhanced form submission to database
+    const enhancedDbSubmission: Omit<EnhancedOnboardingSubmission, 'id' | 'created_at'> = {
+      business_name: validatedData.business_name,
+      email: validatedData.email,
+      instagram_handle: validatedData.instagram_handle,
+      other_platforms: validatedData.other_platforms,
+      business_type: validatedData.business_type,
+      business_type_other: validatedData.business_type_other,
+      product_categories: validatedData.product_categories,
+      product_categories_other: validatedData.product_categories_other,
+      customer_questions: validatedData.customer_questions,
+      customer_questions_other: validatedData.customer_questions_other,
+      delivery_pickup: validatedData.delivery_pickup,
+      delivery_options: validatedData.delivery_options,
+      delivery_options_other: validatedData.delivery_options_other,
+      pickup_options: validatedData.pickup_options,
+      pickup_options_other: validatedData.pickup_options_other,
+      delivery_notes: validatedData.delivery_notes,
+      menu_file_url: menuFileUrl,
+      additional_docs_urls: additionalDocsUrls,
+      menu_description: validatedData.menu_description,
+      plan: validatedData.plan,
+      credential_sharing: validatedData.credential_sharing,
+      credentials_direct: validatedData.credentials_direct,
+      has_faqs: validatedData.has_faqs,
+      faq_file_url: faqFileUrl,
+      faq_content: validatedData.faq_content,
+      consent_checkbox: validatedData.consent_checkbox,
+      source: 'enhanced_onboarding_form',
+      payment_status: 'pending'
+    }
+
+    let savedSubmission: EnhancedOnboardingSubmission
+    try {
+      savedSubmission = await createEnhancedOnboardingSubmission(enhancedDbSubmission)
+    } catch (dbError) {
+      console.error('Failed to save enhanced onboarding submission to database:', dbError)
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Failed to save submission to database. Please try again.' 
+      })
+    }
+
+    // Create enhanced form submission object for emails
+    const enhancedSubmission: EnhancedFormSubmission = {
+      ...validatedData,
+      menuFileUrl,
+      faqFileUrl,
+      additionalDocsUrls,
+      submissionId: savedSubmission.id!
+    }
 
     // Send welcome email to customer
     try {
-      // Create a compatible object for legacy email functions
-      const emailData = {
-        name: validatedData.business_name,
-        email: validatedData.email,
-        plan: validatedData.plan,
-        id: submissionId,
-        source: 'ai-chatflows.com',
-        payment_status: 'pending' as const,
-        created_at: new Date().toISOString(),
-        login_sharing_preference: 'direct' // Default value for legacy compatibility
-      }
-      const welcomeEmail = createWelcomeEmail(emailData)
-      await sendEmail(welcomeEmail)
+      const welcomeEmail = createEnhancedWelcomeEmail(enhancedSubmission)
+      await sendEmail(welcomeEmail, { preventDuplicates: true, emailType: 'form_submission' })
+      console.log(`Welcome email sent to ${validatedData.email}`)
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError)
       // Don't fail the entire request if email fails
@@ -145,38 +183,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Send notification email to admin
     try {
-      // Create a comprehensive admin notification with enhanced data
-      const adminEmailContent = `
-        New Enhanced Onboarding Submission:
-        
-        Business: ${validatedData.business_name}
-        Instagram: ${validatedData.instagram_handle}
-        Type: ${validatedData.business_type}${validatedData.business_type_other ? ` (${validatedData.business_type_other})` : ''}
-        Email: ${validatedData.email}
-        Plan: ${validatedData.plan}
-        
-        Categories: ${validatedData.product_categories.join(', ')}${validatedData.product_categories_other ? ` (Other: ${validatedData.product_categories_other})` : ''}
-        
-        Customer Questions: ${validatedData.customer_questions.join(', ')}${validatedData.customer_questions_other ? ` (Other: ${validatedData.customer_questions_other})` : ''}
-        
-        Delivery/Pickup: ${validatedData.delivery_pickup}
-        ${validatedData.delivery_options?.length ? `Delivery Options: ${validatedData.delivery_options.join(', ')}` : ''}
-        ${validatedData.pickup_options?.length ? `Pickup Options: ${validatedData.pickup_options.join(', ')}` : ''}
-        
-        Credentials: ${validatedData.credential_sharing}
-        FAQs: ${validatedData.has_faqs}
-        
-        Files uploaded: ${[menuFileUrl, faqFileUrl, ...additionalDocsUrls].filter(Boolean).length}
-        
-        Notes: ${validatedData.delivery_notes || 'None'}
-      `
+      const adminEmail = createEnhancedAdminNotificationEmail(enhancedSubmission)
       
-      const adminEmail = {
-        to: ['eliascolon23@gmail.com'],
-        subject: `New Enhanced Onboarding: ${validatedData.business_name}`,
-        html: adminEmailContent.replace(/\n/g, '<br>')
+      // Prepare attachments for admin email
+      const attachments = []
+      if (menuFileUrl) {
+        attachments.push({ filename: 'menu-document', url: menuFileUrl })
       }
-      await sendEmail(adminEmail)
+      if (faqFileUrl) {
+        attachments.push({ filename: 'faq-document', url: faqFileUrl })
+      }
+      if (additionalDocsUrls && additionalDocsUrls.length > 0) {
+        additionalDocsUrls.forEach((url, index) => {
+          attachments.push({ filename: `additional-document-${index + 1}`, url })
+        })
+      }
+
+      if (attachments.length > 0) {
+        await sendEmailWithAttachments(adminEmail, attachments, { preventDuplicates: true, emailType: 'form_submission' })
+      } else {
+        await sendEmail(adminEmail, { preventDuplicates: true, emailType: 'form_submission' })
+      }
+      console.log(`Admin notification sent for ${validatedData.business_name} with ${attachments.length} attachments`)
     } catch (emailError) {
       console.error('Failed to send admin notification:', emailError)
       // Don't fail the entire request if email fails
@@ -185,7 +213,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json({
       success: true,
       message: 'Enhanced onboarding form submitted successfully',
-      submissionId: submissionId,
+      submissionId: savedSubmission.id!,
     })
 
   } catch (error) {

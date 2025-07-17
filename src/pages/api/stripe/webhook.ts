@@ -1,8 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { buffer } from 'micro'
 import { getStripeInstance } from '@/lib/stripe'
-import { updateFormSubmission, getFormSubmissionByStripeSession } from '@/lib/supabase'
-import { sendEmail, createPaymentConfirmationEmail, createAdminNotificationEmail } from '@/lib/resend'
+import { 
+  updateFormSubmission, 
+  getFormSubmissionByStripeSession, 
+  updateEnhancedOnboardingSubmission, 
+  getEnhancedOnboardingSubmissionByStripeSession 
+} from '@/lib/supabase'
+import { sendEmail, createPaymentConfirmationClientEmail, createPaymentConfirmationAdminEmail } from '@/lib/resend'
 
 export const config = {
   api: {
@@ -36,35 +41,79 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           const submissionId = session.client_reference_id
 
           if (submissionId) {
-            // Update the submission status
-            await updateFormSubmission(submissionId, {
-              payment_status: 'completed',
-              stripe_session_id: session.id,
-            })
+            let submission: any = null // eslint-disable-line @typescript-eslint/no-explicit-any
+            let isEnhancedOnboarding = false
 
-            // Get the updated submission for emails
-            const submission = await getFormSubmissionByStripeSession(session.id)
+            // Try to update enhanced onboarding submission first
+            try {
+              await updateEnhancedOnboardingSubmission(submissionId, {
+                payment_status: 'completed',
+                stripe_session_id: session.id,
+              })
+              
+              // If successful, get the updated submission
+              submission = await getEnhancedOnboardingSubmissionByStripeSession(session.id)
+              isEnhancedOnboarding = true
+              console.log(`Enhanced onboarding payment completed for submission ${submissionId}`)
+            } catch {
+              // If not found in enhanced onboarding, try legacy form submissions
+              try {
+                await updateFormSubmission(submissionId, {
+                  payment_status: 'completed',
+                  stripe_session_id: session.id,
+                })
+                
+                // If successful, get the updated submission
+                submission = await getFormSubmissionByStripeSession(session.id)
+                console.log(`Legacy form payment completed for submission ${submissionId}`)
+              } catch (legacyError) {
+                console.error('Failed to find submission in either enhanced or legacy tables:', legacyError)
+                return res.status(400).json({ error: 'Submission not found' })
+              }
+            }
+
+            if (!submission) {
+              console.error(`No submission found for session ${session.id}`)
+              return res.status(400).json({ error: 'Submission not found' })
+            }
 
             // Send payment confirmation email to customer
             try {
-              const confirmationEmail = createPaymentConfirmationEmail(submission)
-              await sendEmail(confirmationEmail)
+              const stripeSessionData = {
+                id: session.id,
+                amount_total: session.amount_total,
+                currency: session.currency,
+                customer: session.customer,
+                payment_intent: session.payment_intent,
+                payment_status: session.payment_status
+              }
+              const confirmationEmail = createPaymentConfirmationClientEmail(submission, stripeSessionData)
+              await sendEmail(confirmationEmail, { preventDuplicates: true, emailType: 'payment_confirmation' })
+              console.log(`Payment confirmation email sent to ${submission.email}`)
             } catch (emailError) {
               console.error('Failed to send payment confirmation email:', emailError)
             }
 
-            // Send updated admin notification
+            // Send payment notification to admin
             try {
-              const adminEmail = createAdminNotificationEmail({
-                ...submission,
-                payment_status: 'completed',
-              })
-              await sendEmail(adminEmail)
+              const stripeSessionData = {
+                id: session.id,
+                amount_total: session.amount_total,
+                currency: session.currency,
+                customer: session.customer,
+                payment_intent: session.payment_intent,
+                payment_status: session.payment_status,
+                created: session.created,
+                metadata: session.metadata
+              }
+              const adminEmail = createPaymentConfirmationAdminEmail(submission, stripeSessionData)
+              await sendEmail(adminEmail, { preventDuplicates: true, emailType: 'payment_confirmation' })
+              
+              const businessName = isEnhancedOnboarding ? submission.business_name : submission.name
+              console.log(`Payment admin notification sent for ${businessName}`)
             } catch (emailError) {
               console.error('Failed to send admin payment notification:', emailError)
             }
-
-            console.log(`Payment completed for submission ${submissionId}`)
           }
         }
         break
