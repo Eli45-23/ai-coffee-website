@@ -17,7 +17,6 @@ const pricingPlans: PricingPlan[] = [
       'Up to 500 contacts/month',
       'Email Support (24hr response)',
       'Full Setup & Deployment',
-      'Multi-platform automation',
       'Advanced personalization',
       'Priority Support',
     ],
@@ -191,14 +190,14 @@ const Home: NextPage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto pt-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto pt-12 overflow-visible">
             {pricingPlans.map((plan, index) => (
               <div 
                 key={plan.id} 
                 className={`pricing-card ${plan.popular ? 'popular' : ''} animate-slide-up stagger-${index + 1} relative`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                  <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 z-10">
                     <span className="bg-gradient-to-r from-[#10F2B0] to-[#00D0FF] text-white px-6 py-2 rounded-full text-sm font-bold uppercase tracking-wider shadow-lg whitespace-nowrap">
                       MOST POPULAR
                     </span>
