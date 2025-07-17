@@ -4,6 +4,13 @@ import { ClientOnboardingSubmission } from '@/types'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Supabase environment variables missing:', {
+    url: supabaseUrl ? 'Set' : 'Missing',
+    key: supabaseAnonKey ? 'Set' : 'Missing'
+  })
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Enhanced onboarding submission interface for database
@@ -108,17 +115,44 @@ export async function getFormSubmissionByStripeSession(sessionId: string) {
 
 // New enhanced onboarding functions
 export async function createClientOnboardingSubmission(data: Omit<ClientOnboardingSubmission, 'id' | 'created_at'>) {
-  const { data: submission, error } = await supabase
-    .from('client_onboarding')
-    .insert([data])
-    .select()
-    .single()
+  console.log('Attempting to save to client_onboarding table:', {
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing',
+    urlLength: process.env.NEXT_PUBLIC_SUPABASE_URL?.length,
+    dataKeys: Object.keys(data)
+  })
+  
+  try {
+    const { data: submission, error } = await supabase
+      .from('client_onboarding')
+      .insert([data])
+      .select()
+      .single()
 
-  if (error) {
-    throw new Error(`Failed to create client onboarding submission: ${error.message}`)
+    if (error) {
+      console.error('Supabase error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      })
+      throw new Error(`Failed to create client onboarding submission: ${error.message}`)
+    }
+
+    return submission
+  } catch (err) {
+    console.error('Full error in createClientOnboardingSubmission:', err)
+    if (err instanceof TypeError && err.message === 'fetch failed') {
+      console.error('Fetch failed - possible causes:')
+      console.error('1. Invalid Supabase URL format')
+      console.error('2. Network connectivity issues')
+      console.error('3. CORS issues (though this is server-side)')
+      console.error('URL format check:', {
+        hasHttps: process.env.NEXT_PUBLIC_SUPABASE_URL?.startsWith('https://'),
+        endsWithSupabaseCo: process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('.supabase.co')
+      })
+    }
+    throw err
   }
-
-  return submission
 }
 
 export async function updateClientOnboardingSubmission(id: string, updates: Partial<ClientOnboardingSubmission>) {
