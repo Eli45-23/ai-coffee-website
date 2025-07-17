@@ -8,9 +8,11 @@ import {
   BUSINESS_TYPES,
   CUSTOMER_QUESTIONS,
   DELIVERY_OPTIONS,
-  PICKUP_OPTIONS
+  PICKUP_OPTIONS,
+  ClientOnboardingSubmission
 } from '@/types'
 import { STRIPE_PRICING_LINKS } from '@/lib/stripe'
+import { supabaseClient, uploadFileToSupabaseStorage, uploadMultipleFilesToStorage } from '@/lib/supabase-client'
 import FormInput from '@/components/ui/FormInput'
 import FormTextarea from '@/components/ui/FormTextarea'
 import FormDropdown from '@/components/ui/FormDropdown'
@@ -106,56 +108,140 @@ export default function EnhancedOnboardingForm({ initialPlan = 'starter' }: Enha
     setIsSubmitting(true)
 
     try {
-      const formData = new FormData()
-      
-      // Add all form fields
-      Object.entries(data).forEach(([key, value]) => {
-        if (key === 'product_categories' || key === 'customer_questions' || 
-            key === 'delivery_options' || key === 'pickup_options') {
-          // Handle arrays
-          formData.append(key, JSON.stringify(value))
-        } else if (key === 'menu_file' || key === 'faq_file' || key === 'additional_docs') {
-          // Skip files - handle them separately
-          return
-        } else if (value !== undefined && value !== null) {
-          formData.append(key, value.toString())
-        }
-      })
+      // Step 1: Upload files to Supabase storage
+      let menuFileUrl: string | undefined
+      let faqFileUrl: string | undefined
+      let additionalDocsUrls: string[] = []
 
-      // Add files
+      // Upload menu file if present
       if (data.menu_file) {
-        formData.append('menu_file', data.menu_file)
-      }
-      if (data.faq_file) {
-        formData.append('faq_file', data.faq_file)
-      }
-      if (data.additional_docs) {
-        data.additional_docs.forEach((file, index) => {
-          formData.append(`additional_docs_${index}`, file)
-        })
-      }
-
-      const response = await fetch('/api/enhanced-onboarding', {
-        method: 'POST',
-        body: formData,
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        // Redirect directly to Stripe checkout based on selected plan
-        const checkoutUrl = STRIPE_PRICING_LINKS[data.plan]
-        if (checkoutUrl) {
-          window.location.href = checkoutUrl
-        } else {
-          throw new Error('Invalid plan selected')
+        try {
+          menuFileUrl = await uploadFileToSupabaseStorage(data.menu_file, 'menus', 'menus')
+        } catch (error) {
+          console.error('Menu file upload error:', error)
+          throw new Error('Failed to upload menu file. Please try again.')
         }
-      } else {
-        throw new Error(result.message || 'Failed to submit form')
       }
+
+      // Upload FAQ file if present
+      if (data.faq_file) {
+        try {
+          faqFileUrl = await uploadFileToSupabaseStorage(data.faq_file, 'documents', 'documents')
+        } catch (error) {
+          console.error('FAQ file upload error:', error)
+          throw new Error('Failed to upload FAQ file. Please try again.')
+        }
+      }
+
+      // Upload additional documents if present
+      if (data.additional_docs && data.additional_docs.length > 0) {
+        try {
+          additionalDocsUrls = await uploadMultipleFilesToStorage(data.additional_docs, 'documents', 'documents')
+        } catch (error) {
+          console.error('Additional docs upload error:', error)
+          throw new Error('Failed to upload additional documents. Please try again.')
+        }
+      }
+
+      // Step 2: Prepare delivery/pickup info as text (to match database schema)
+      let deliveryInfo = data.delivery_pickup
+      if (data.delivery_pickup === 'delivery' || data.delivery_pickup === 'both') {
+        const deliveryOpts = data.delivery_options || []
+        if (deliveryOpts.length > 0) {
+          deliveryInfo += ` - Delivery: ${deliveryOpts.join(', ')}`
+          if (data.delivery_options_other) {
+            deliveryInfo += ` (${data.delivery_options_other})`
+          }
+        }
+      }
+      if (data.delivery_pickup === 'pickup' || data.delivery_pickup === 'both') {
+        const pickupOpts = data.pickup_options || []
+        if (pickupOpts.length > 0) {
+          deliveryInfo += ` - Pickup: ${pickupOpts.join(', ')}`
+          if (data.pickup_options_other) {
+            deliveryInfo += ` (${data.pickup_options_other})`
+          }
+        }
+      }
+      if (data.delivery_notes) {
+        deliveryInfo += ` - Notes: ${data.delivery_notes}`
+      }
+
+      // Step 3: Prepare credential info
+      let credentialInfo = data.credential_sharing
+      if (data.credential_sharing === 'direct' && data.credentials_direct) {
+        credentialInfo += ` - Credentials provided`
+      }
+
+      // Step 4: Map form data to database schema
+      const dbSubmission: Omit<ClientOnboardingSubmission, 'id' | 'created_at'> = {
+        business_name: data.business_name,
+        email: data.email,
+        instagram_handle: data.instagram_handle,
+        other_platforms: data.other_platforms,
+        business_type: data.business_type + (data.business_type_other ? ` - ${data.business_type_other}` : ''),
+        product_categories: data.product_categories,
+        product_categories_other: data.product_categories_other,
+        common_questions: data.customer_questions,
+        common_questions_other: data.customer_questions_other,
+        delivery_option: deliveryInfo,
+        menu_file_url: menuFileUrl,
+        menu_text: data.menu_description || (data.faq_content?.substring(0, 500)) || '',
+        additional_docs_urls: additionalDocsUrls,
+        plan: data.plan,
+        credential_sharing: credentialInfo,
+        has_faqs: data.has_faqs,
+        faq_file_url: faqFileUrl,
+        consent_checkbox: data.consent_checkbox,
+        source: 'enhanced_onboarding_form',
+        payment_status: 'pending'
+      }
+
+      // Step 5: Insert data into Supabase using frontend client (RLS compatible)
+      const { data: submission, error } = await supabaseClient
+        .from('client_onboarding')
+        .insert([dbSubmission])
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Database insertion error:', error)
+        throw new Error('Failed to save your information. Please try again.')
+      }
+
+      // Step 6: Send notification emails via API
+      try {
+        await fetch('/api/enhanced-onboarding', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            submission: submission,
+            formData: data,
+            fileUrls: {
+              menuFileUrl,
+              faqFileUrl,
+              additionalDocsUrls
+            }
+          }),
+        })
+      } catch (emailError) {
+        console.error('Email sending error:', emailError)
+        // Don't fail the entire submission if email fails
+      }
+
+      // Step 7: Redirect to Stripe checkout
+      const checkoutUrl = STRIPE_PRICING_LINKS[data.plan]
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl
+      } else {
+        throw new Error('Invalid plan selected')
+      }
+
     } catch (error) {
       console.error('Form submission error:', error)
-      alert('There was an error submitting your form. Please try again.')
+      alert(`There was an error submitting your form: ${error instanceof Error ? error.message : 'Please try again.'}`)
     } finally {
       setIsSubmitting(false)
     }

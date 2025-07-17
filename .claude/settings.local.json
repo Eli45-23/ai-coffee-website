@@ -10,7 +10,8 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(find:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }
