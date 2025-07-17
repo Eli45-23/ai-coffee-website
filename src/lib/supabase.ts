@@ -4,11 +4,24 @@ import { ClientOnboardingSubmission } from '@/types'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Supabase environment variables missing:', {
-    url: supabaseUrl ? 'Set' : 'Missing',
-    key: supabaseAnonKey ? 'Set' : 'Missing'
+// Log the environment on server startup
+if (typeof window === 'undefined') {
+  console.log('Supabase client initialization (server-side):', {
+    urlSet: !!supabaseUrl,
+    keySet: !!supabaseAnonKey,
+    urlLength: supabaseUrl?.length,
+    keyLength: supabaseAnonKey?.length,
+    nodeEnv: process.env.NODE_ENV
   })
+}
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  const errorMsg = `Supabase environment variables missing: URL=${supabaseUrl ? 'Set' : 'Missing'}, Key=${supabaseAnonKey ? 'Set' : 'Missing'}`
+  console.error(errorMsg)
+  if (typeof window === 'undefined') {
+    // Server-side: throw error to prevent bad initialization
+    throw new Error(errorMsg)
+  }
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
