@@ -120,6 +120,42 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
+    // Prepare delivery/pickup info as text
+    let deliveryInfo = validatedData.delivery_pickup;
+    if (validatedData.delivery_pickup === 'delivery' || validatedData.delivery_pickup === 'both') {
+      const deliveryOpts = validatedData.delivery_options || [];
+      if (deliveryOpts.length > 0) {
+        deliveryInfo += ` - Delivery: ${deliveryOpts.join(', ')}`;
+        if (validatedData.delivery_options_other) {
+          deliveryInfo += ` (${validatedData.delivery_options_other})`;
+        }
+      }
+    }
+    if (validatedData.delivery_pickup === 'pickup' || validatedData.delivery_pickup === 'both') {
+      const pickupOpts = validatedData.pickup_options || [];
+      if (pickupOpts.length > 0) {
+        deliveryInfo += ` - Pickup: ${pickupOpts.join(', ')}`;
+        if (validatedData.pickup_options_other) {
+          deliveryInfo += ` (${validatedData.pickup_options_other})`;
+        }
+      }
+    }
+    if (validatedData.delivery_notes) {
+      deliveryInfo += ` - Notes: ${validatedData.delivery_notes}`;
+    }
+
+    // Prepare credential info
+    let credentialInfo = validatedData.credential_sharing;
+    if (validatedData.credential_sharing === 'direct' && validatedData.credentials_direct) {
+      credentialInfo += ` - Credentials provided`;
+    }
+
+    // Prepare FAQ info
+    let faqInfo = '';
+    if (validatedData.has_faqs === 'yes' && validatedData.faq_content) {
+      faqInfo = validatedData.faq_content.substring(0, 500); // Store first 500 chars in menu_text
+    }
+
     // Save enhanced form submission to database
     const enhancedDbSubmission: Omit<ClientOnboardingSubmission, 'id' | 'created_at'> = {
       business_name: validatedData.business_name,
@@ -131,12 +167,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       product_categories_other: validatedData.product_categories_other,
       common_questions: validatedData.customer_questions,
       common_questions_other: validatedData.customer_questions_other,
-      delivery_option: validatedData.delivery_pickup,
+      delivery_option: deliveryInfo,
       menu_file_url: menuFileUrl,
-      menu_text: validatedData.menu_description,
+      menu_text: validatedData.menu_description || faqInfo || '',
       additional_docs_urls: additionalDocsUrls,
       plan: validatedData.plan,
-      credential_sharing: validatedData.credential_sharing,
+      credential_sharing: credentialInfo,
       has_faqs: validatedData.has_faqs,
       faq_file_url: faqFileUrl,
       consent_checkbox: validatedData.consent_checkbox,
@@ -149,9 +185,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       savedSubmission = await createClientOnboardingSubmission(enhancedDbSubmission)
     } catch (dbError) {
       console.error('Failed to save enhanced onboarding submission to database:', dbError)
+      console.error('Submission data:', JSON.stringify(enhancedDbSubmission, null, 2))
       return res.status(500).json({ 
         success: false, 
-        message: 'Failed to save submission to database. Please try again.' 
+        message: 'Failed to save submission to database. Please try again.',
+        error: process.env.NODE_ENV === 'development' ? (dbError instanceof Error ? dbError.message : String(dbError)) : undefined 
       })
     }
 
