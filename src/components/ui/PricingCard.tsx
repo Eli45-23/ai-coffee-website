@@ -39,7 +39,7 @@ export default function PricingCard({ plan }: PricingCardProps) {
       </ul>
 
       <Link 
-        href={`/onboarding?plan=${plan.id}`}
+        href={`/start?plan=${plan.id}`}
         className="block w-full"
       >
         <Button 

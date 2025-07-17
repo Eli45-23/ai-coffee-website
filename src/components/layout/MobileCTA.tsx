@@ -21,7 +21,7 @@ export default function MobileCTA() {
       isVisible ? 'translate-y-0' : 'translate-y-full'
     )}>
       <div className="bg-white border-t border-gray-200 p-4 shadow-lg">
-        <Link href="/onboarding" className="btn-primary w-full block text-center">
+        <Link href="/start" className="btn-primary w-full block text-center">
           Get Started Today
         </Link>
       </div>

@@ -26,7 +26,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/onboarding" className="text-gray-600 hover:text-gray-900 text-sm">
+                <Link href="/start" className="text-gray-600 hover:text-gray-900 text-sm">
                   Get Started
                 </Link>
               </li>
@@ -54,7 +54,7 @@ export default function Footer() {
             <p className="text-gray-600 text-sm">
               Ready to automate your social media?
             </p>
-            <Link href="/onboarding" className="btn-primary mt-4 inline-block">
+            <Link href="/start" className="btn-primary mt-4 inline-block">
               Start Now
             </Link>
           </div>

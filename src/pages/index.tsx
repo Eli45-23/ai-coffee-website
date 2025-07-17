@@ -75,7 +75,7 @@ const Home: NextPage = () => {
               scheduling, and analytics. Let AI handle your posts while you focus on growing your business.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/onboarding">
+              <Link href="/start">
                 <Button size="lg" className="w-full sm:w-auto">
                   Get Started Today
                 </Button>
@@ -183,7 +183,7 @@ const Home: NextPage = () => {
           <p className="text-xl text-gray-300 mb-8">
             Join hundreds of businesses already using AIChatFlows to grow their online presence.
           </p>
-          <Link href="/onboarding">
+          <Link href="/start">
             <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100">
               Start Your Free Trial
             </Button>

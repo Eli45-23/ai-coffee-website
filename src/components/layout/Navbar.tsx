@@ -34,13 +34,13 @@ export default function Navbar() {
             <Link href="/#pricing" className="text-gray-600 hover:text-gray-900 transition-colors">
               Pricing
             </Link>
-            <Link href="/onboarding" className="btn-primary">
+            <Link href="/start" className="btn-primary">
               Get Started
             </Link>
           </div>
 
           <div className="md:hidden">
-            <Link href="/onboarding" className="btn-primary text-sm px-4 py-2">
+            <Link href="/start" className="btn-primary text-sm px-4 py-2">
               Get Started
             </Link>
           </div>
