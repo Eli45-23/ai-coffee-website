@@ -24,9 +24,6 @@
     overflow-x: hidden;
   }
   
-  * {
-    @apply border-border;
-  }
 }
 
 @layer components {
