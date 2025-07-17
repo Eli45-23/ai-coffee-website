@@ -77,13 +77,11 @@ const Home: NextPage = () => {
             <p className="text-xl sm:text-2xl lg:text-3xl mb-16 max-w-3xl mx-auto font-light text-secondary leading-relaxed">
               Advanced AI Chatbots • Customer Service Automation
             </p>
-            <div className="animate-glow-pulse">
-              <Link href="/start">
-                <button className="btn-primary px-12 py-5 text-lg font-bold rounded-xl hover-lift">
-                  SEE PLANS
-                </button>
-              </Link>
-            </div>
+            <Link href="/#pricing">
+              <button className="bg-gradient-to-r from-[#10F2B0] to-[#00BDFD] text-white px-6 py-3 rounded-full hover:brightness-110 transition text-lg font-bold">
+                SEE PLANS
+              </button>
+            </Link>
           </div>
         </div>
         
@@ -319,10 +317,10 @@ const Home: NextPage = () => {
           <div className="text-center mb-12">
             <h4 className="font-semibold mb-4 accent-green text-xl">Contact Us</h4>
             <a 
-              href="mailto:elisecore23@gmail.com" 
+              href="mailto:eliascolon23@gmail.com" 
               className="text-secondary hover:text-white transition-colors text-lg hover-lift inline-block px-6 py-3 rounded-lg border border-white/10 hover:border-[#10F2B0]/30"
             >
-              Email: elisecore23@gmail.com
+              Email: eliascolon23@gmail.com
             </a>
           </div>
           <div className="pt-8 border-t" style={{borderColor: '#333333'}}>
