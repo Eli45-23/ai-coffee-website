@@ -20,7 +20,7 @@ export default function MobileCTA() {
       'fixed bottom-0 left-0 right-0 z-40 md:hidden transition-transform duration-300',
       isVisible ? 'translate-y-0' : 'translate-y-full'
     )}>
-      <div className="bg-white border-t border-gray-200 p-4 shadow-lg">
+      <div className="bg-gray-900 border-t border-gray-700 p-4 shadow-lg">
         <Link href="/start" className="btn-primary w-full block text-center">
           Get Started Today
         </Link>

@@ -9,13 +9,15 @@ interface LayoutProps {
   title?: string
   description?: string
   showMobileCTA?: boolean
+  showFooter?: boolean
 }
 
 export default function Layout({ 
   children, 
   title = 'AIChatFlows - AI-Powered Social Media Management',
   description = 'Automate your social media presence with AI-powered content creation and management. Get started today.',
-  showMobileCTA = true 
+  showMobileCTA = true,
+  showFooter = true
 }: LayoutProps) {
   return (
     <>
@@ -48,7 +50,7 @@ export default function Layout({
         <main className="flex-1 pt-16">
           {children}
         </main>
-        <Footer />
+        {showFooter && <Footer />}
         {showMobileCTA && <MobileCTA />}
       </div>
     </>
