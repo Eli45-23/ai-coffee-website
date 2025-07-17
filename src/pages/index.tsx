@@ -65,44 +65,44 @@ const Home: NextPage = () => {
   return (
     <Layout showFooter={false}>
       {/* Hero Section - Dark Theme */}
-      <section className="min-h-screen flex items-center justify-center bg-gray-900 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
+      <section className="min-h-screen flex items-center justify-center" style={{backgroundColor: '#0a0a0a'}}>
+        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <div className="animate-fade-in">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6">
-              <span className="text-teal-400">AI</span>ChatFlows
+              <span style={{color: '#00d4aa'}}>AI</span>ChatFlows
             </h1>
-            <p className="text-xl sm:text-2xl text-gray-300 mb-12 max-w-2xl mx-auto">
+            <p className="text-xl sm:text-2xl mb-12 max-w-2xl mx-auto" style={{color: '#e5e5e5'}}>
               Advanced AI Chatbots • Customer Service Automation
             </p>
             <Link href="/start">
-              <Button className="bg-teal-500 hover:bg-teal-600 text-white px-8 py-4 text-lg font-semibold rounded-lg">
+              <button className="btn-primary px-8 py-4 text-lg font-semibold rounded-lg">
                 SEE PLANS
-              </Button>
+              </button>
             </Link>
           </div>
         </div>
       </section>
 
       {/* What We Offer Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900">
+      <section className="py-20 px-4 sm:px-6 lg:px-8" style={{backgroundColor: '#0a0a0a'}}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl lg:text-5xl font-bold text-teal-400 mb-4">
+            <h2 className="text-4xl lg:text-5xl font-bold mb-4" style={{color: '#00d4aa'}}>
               What We Offer
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <div className="bg-gray-800 rounded-xl p-8 text-center">
+            <div className="rounded-xl p-8 text-center" style={{backgroundColor: '#1a1a1a'}}>
               <h3 className="text-2xl font-bold text-white mb-4">24/7 AI Chatbot</h3>
-              <p className="text-gray-300">
+              <p style={{color: '#e5e5e5'}}>
                 Instant answers to customer questions across Instagram, Facebook, SMS & more.
               </p>
             </div>
 
-            <div className="bg-gray-800 rounded-xl p-8 text-center">
+            <div className="rounded-xl p-8 text-center" style={{backgroundColor: '#1a1a1a'}}>
               <h3 className="text-2xl font-bold text-white mb-4">Seamless Setup</h3>
-              <p className="text-gray-300">
+              <p style={{color: '#e5e5e5'}}>
                 No coding needed—deploy your branded bot in minutes and start automating.
               </p>
             </div>
@@ -111,41 +111,41 @@ const Home: NextPage = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900">
+      <section className="py-20 px-4 sm:px-6 lg:px-8" style={{backgroundColor: '#0a0a0a'}}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl lg:text-5xl font-bold text-blue-400 mb-4">
+            <h2 className="text-4xl lg:text-5xl font-bold mb-4" style={{color: '#3b82f6'}}>
               How It Works
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <div className="bg-gray-800 rounded-xl p-8 text-center">
-              <div className="w-16 h-16 bg-teal-500 rounded-full mx-auto mb-6 flex items-center justify-center">
+            <div className="rounded-xl p-8 text-center" style={{backgroundColor: '#1a1a1a'}}>
+              <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center" style={{backgroundColor: '#00d4aa'}}>
                 <span className="text-white text-2xl font-bold">1</span>
               </div>
               <h3 className="text-xl font-bold text-white mb-4">Connect Your Channels</h3>
-              <p className="text-gray-300">
+              <p style={{color: '#e5e5e5'}}>
                 Securely link your Instagram, WhatsApp, TikTok, or Facebook accounts.
               </p>
             </div>
 
-            <div className="bg-gray-800 rounded-xl p-8 text-center">
-              <div className="w-16 h-16 bg-teal-500 rounded-full mx-auto mb-6 flex items-center justify-center">
+            <div className="rounded-xl p-8 text-center" style={{backgroundColor: '#1a1a1a'}}>
+              <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center" style={{backgroundColor: '#00d4aa'}}>
                 <span className="text-white text-2xl font-bold">2</span>
               </div>
               <h3 className="text-xl font-bold text-white mb-4">Customize Your AI</h3>
-              <p className="text-gray-300">
+              <p style={{color: '#e5e5e5'}}>
                 Set your brand voice, FAQs, and product info—no coding needed.
               </p>
             </div>
 
-            <div className="bg-gray-800 rounded-xl p-8 text-center">
-              <div className="w-16 h-16 bg-teal-500 rounded-full mx-auto mb-6 flex items-center justify-center">
+            <div className="rounded-xl p-8 text-center" style={{backgroundColor: '#1a1a1a'}}>
+              <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center" style={{backgroundColor: '#00d4aa'}}>
                 <span className="text-white text-2xl font-bold">3</span>
               </div>
               <h3 className="text-xl font-bold text-white mb-4">Automate and Grow</h3>
-              <p className="text-gray-300">
+              <p style={{color: '#e5e5e5'}}>
                 Let AI handle repetitive questions and boost your engagement 24/7.
               </p>
             </div>
@@ -154,23 +154,23 @@ const Home: NextPage = () => {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-800">
+      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8" style={{backgroundColor: '#1a1a1a'}}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl lg:text-5xl font-bold text-teal-400 mb-4">
+            <h2 className="text-4xl lg:text-5xl font-bold mb-4" style={{color: '#00d4aa'}}>
               Choose Your Plan
             </h2>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+            <p className="text-xl max-w-2xl mx-auto" style={{color: '#e5e5e5'}}>
               Transform your customer service with AI automation that works 24/7
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {pricingPlans.map((plan, index) => (
-              <div key={plan.id} className="bg-gray-900 rounded-xl p-8 relative border border-gray-700">
+              <div key={plan.id} className="rounded-xl p-8 relative" style={{backgroundColor: '#0a0a0a', border: plan.popular ? '1px solid #00d4aa' : '1px solid #333333'}}>
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-teal-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                    <span className="text-white px-4 py-1 rounded-full text-sm font-medium" style={{backgroundColor: '#00d4aa'}}>
                       MOST POPULAR
                     </span>
                   </div>
@@ -179,30 +179,30 @@ const Home: NextPage = () => {
                 <div className="text-center mb-8">
                   {/* Plan Icons */}
                   <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                    {index === 0 && <div className="w-8 h-8 bg-amber-500 rounded-full"></div>}
-                    {index === 1 && <div className="w-8 h-8 bg-yellow-400 rounded text-center flex items-center justify-center">⚡</div>}
-                    {index === 2 && <div className="w-8 h-8 bg-blue-400 rounded text-center flex items-center justify-center">💎</div>}
+                    {index === 0 && <div className="w-8 h-8 rounded-full" style={{backgroundColor: '#f59e0b'}}></div>}
+                    {index === 1 && <div className="w-8 h-8 rounded text-center flex items-center justify-center" style={{backgroundColor: '#fbbf24'}}>⚡</div>}
+                    {index === 2 && <div className="w-8 h-8 rounded text-center flex items-center justify-center" style={{backgroundColor: '#60a5fa'}}>💎</div>}
                   </div>
                   
                   <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
                   
                   {/* Setup Fee */}
-                  {index === 0 && <p className="text-gray-400 text-sm mb-2">One-time Setup: $50</p>}
-                  {index === 1 && <p className="text-gray-400 text-sm mb-2">One-time Setup: $50</p>}
-                  {index === 2 && <p className="text-gray-400 text-sm mb-2">Setup Included FREE</p>}
+                  {index === 0 && <p className="text-sm mb-2" style={{color: '#e5e5e5'}}>One-time Setup: $50</p>}
+                  {index === 1 && <p className="text-sm mb-2" style={{color: '#e5e5e5'}}>One-time Setup: $50</p>}
+                  {index === 2 && <p className="text-sm mb-2" style={{color: '#e5e5e5'}}>Setup Included FREE</p>}
                   
                   <div className="mb-6">
                     <span className="text-4xl font-bold text-white">
                       {formatPrice(plan.price)}
                     </span>
-                    <span className="text-gray-400">/month</span>
+                    <span style={{color: '#e5e5e5'}}>/month</span>
                   </div>
                 </div>
 
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-start text-gray-300">
-                      <svg className="h-5 w-5 text-teal-400 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <li key={featureIndex} className="flex items-start" style={{color: '#e5e5e5'}}>
+                      <svg className="h-5 w-5 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" style={{color: '#00d4aa'}}>
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                       <span>{feature}</span>
@@ -211,15 +211,21 @@ const Home: NextPage = () => {
                 </ul>
 
                 <Link href={`/start?plan=${plan.id}`} className="block w-full">
-                  <Button 
-                    className={`w-full py-3 rounded-lg font-semibold ${
-                      plan.popular 
-                        ? 'bg-teal-500 hover:bg-teal-600 text-white' 
-                        : 'bg-gray-700 hover:bg-gray-600 text-white'
-                    }`}
+                  <button 
+                    className="w-full py-3 rounded-lg font-semibold text-white transition-all"
+                    style={{
+                      backgroundColor: plan.popular ? '#00d4aa' : '#1a1a1a',
+                      border: plan.popular ? 'none' : '1px solid #333333'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = plan.popular ? '#00b894' : '#2a2a2a'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = plan.popular ? '#00d4aa' : '#1a1a1a'
+                    }}
                   >
                     CHOOSE {plan.name.toUpperCase()}
-                  </Button>
+                  </button>
                 </Link>
               </div>
             ))}
@@ -228,41 +234,41 @@ const Home: NextPage = () => {
       </section>
 
       {/* Real Businesses, Real Results Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900">
+      <section className="py-20 px-4 sm:px-6 lg:px-8" style={{backgroundColor: '#0a0a0a'}}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl lg:text-5xl font-bold text-teal-400 mb-4">
+            <h2 className="text-4xl lg:text-5xl font-bold mb-4" style={{color: '#00d4aa'}}>
               Real Businesses, Real Results
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <div className="bg-gray-800 rounded-xl p-8 text-center">
-              <div className="w-16 h-16 bg-orange-500 rounded-full mx-auto mb-6 flex items-center justify-center">
-                <div className="w-8 h-8 bg-orange-400 rounded-full"></div>
+            <div className="rounded-xl p-8 text-center" style={{backgroundColor: '#1a1a1a'}}>
+              <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center" style={{backgroundColor: '#f97316'}}>
+                <div className="w-8 h-8 rounded-full" style={{backgroundColor: '#fb923c'}}></div>
               </div>
               <h3 className="text-xl font-bold text-white mb-4">Save 60+ hours every month</h3>
-              <p className="text-gray-300">
+              <p style={{color: '#e5e5e5'}}>
                 Let AI handle repetitive DMs so you can focus on growing your business and building meaningful customer relationships.
               </p>
             </div>
 
-            <div className="bg-gray-800 rounded-xl p-8 text-center">
-              <div className="w-16 h-16 bg-teal-500 rounded-full mx-auto mb-6 flex items-center justify-center">
+            <div className="rounded-xl p-8 text-center" style={{backgroundColor: '#1a1a1a'}}>
+              <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center" style={{backgroundColor: '#00d4aa'}}>
                 <span className="text-white text-2xl">⚡</span>
               </div>
               <h3 className="text-xl font-bold text-white mb-4">Respond instantly, 24/7</h3>
-              <p className="text-gray-300">
+              <p style={{color: '#e5e5e5'}}>
                 Never miss a message — customers get answers even at 2 AM. Your AI assistant never sleeps, ensuring zero response delays.
               </p>
             </div>
 
-            <div className="bg-gray-800 rounded-xl p-8 text-center">
-              <div className="w-16 h-16 bg-pink-500 rounded-full mx-auto mb-6 flex items-center justify-center">
-                <div className="w-8 h-8 bg-pink-400 rounded"></div>
+            <div className="rounded-xl p-8 text-center" style={{backgroundColor: '#1a1a1a'}}>
+              <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center" style={{backgroundColor: '#ec4899'}}>
+                <div className="w-8 h-8 rounded" style={{backgroundColor: '#f472b6'}}></div>
               </div>
               <h3 className="text-xl font-bold text-white mb-4">Cut down support load by 80%</h3>
-              <p className="text-gray-300">
+              <p style={{color: '#e5e5e5'}}>
                 Automate replies to your most common questions and FAQs, dramatically reducing manual customer service workload.
               </p>
             </div>
@@ -271,28 +277,28 @@ const Home: NextPage = () => {
       </section>
 
       {/* Footer Contact Section */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gray-900 border-t border-gray-800">
+      <section className="py-12 px-4 sm:px-6 lg:px-8 border-t" style={{backgroundColor: '#0a0a0a', borderColor: '#333333'}}>
         <div className="max-w-4xl mx-auto text-center">
-          <h3 className="text-2xl font-bold text-teal-400 mb-4">AIChatFlows</h3>
-          <p className="text-gray-300 mb-4">
+          <h3 className="text-2xl font-bold mb-4" style={{color: '#00d4aa'}}>AIChatFlows</h3>
+          <p className="mb-4" style={{color: '#e5e5e5'}}>
             Revolutionizing customer interaction with advanced AI automation.
           </p>
           <div className="text-center">
-            <h4 className="text-teal-400 font-semibold mb-2">Contact Us</h4>
-            <a href="mailto:elisecore23@gmail.com" className="text-gray-300 hover:text-white">
+            <h4 className="font-semibold mb-2" style={{color: '#00d4aa'}}>Contact Us</h4>
+            <a href="mailto:elisecore23@gmail.com" className="hover:text-white transition-colors" style={{color: '#e5e5e5'}}>
               Email: elisecore23@gmail.com
             </a>
           </div>
-          <div className="mt-8 pt-8 border-t border-gray-800">
-            <p className="text-gray-500 text-sm">
+          <div className="mt-8 pt-8 border-t" style={{borderColor: '#333333'}}>
+            <p className="text-sm" style={{color: '#999999'}}>
               © 2024 AIChatFlows. All rights reserved.
             </p>
             <div className="flex justify-center space-x-4 mt-2">
-              <Link href="/legal" className="text-gray-500 hover:text-gray-400 text-sm">
+              <Link href="/legal" className="hover:text-gray-400 text-sm transition-colors" style={{color: '#999999'}}>
                 Privacy Policy
               </Link>
-              <span className="text-gray-500">•</span>
-              <Link href="/legal" className="text-gray-500 hover:text-gray-400 text-sm">
+              <span style={{color: '#999999'}}>•</span>
+              <Link href="/legal" className="hover:text-gray-400 text-sm transition-colors" style={{color: '#999999'}}>
                 Terms of Service
               </Link>
             </div>
