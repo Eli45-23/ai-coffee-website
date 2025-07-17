@@ -1,7 +1,43 @@
 import { Resend } from 'resend'
 import { FormSubmission } from './supabase'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Environment variable validation and debugging
+function validateResendConfig() {
+  const apiKey = process.env.RESEND_API_KEY
+  const fromEmail = process.env.FROM_EMAIL
+  
+  console.log('Resend Configuration Check:', {
+    apiKeyExists: !!apiKey,
+    apiKeyLength: apiKey?.length,
+    apiKeyPrefix: apiKey?.substring(0, 8) + '...',
+    fromEmailExists: !!fromEmail,
+    fromEmail: fromEmail || 'using default'
+  })
+  
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY environment variable is not set')
+  }
+  
+  if (!apiKey.startsWith('re_')) {
+    throw new Error('RESEND_API_KEY appears to be invalid (should start with "re_")')
+  }
+  
+  return { apiKey, fromEmail }
+}
+
+// Initialize Resend with proper error handling
+function initializeResend() {
+  try {
+    const { apiKey } = validateResendConfig()
+    console.log('Initializing Resend client with API key:', apiKey.substring(0, 8) + '...')
+    return new Resend(apiKey)
+  } catch (error) {
+    console.error('Failed to initialize Resend client:', error)
+    throw error
+  }
+}
+
+const resend = initializeResend()
 
 export { resend }
 
@@ -606,6 +642,15 @@ function markEmailSent(key: string): void {
 
 export async function sendEmailWithAttachments(template: EmailTemplate, attachments?: Array<{ filename: string; url: string }>, options?: { preventDuplicates?: boolean, emailType?: 'form_submission' | 'payment_confirmation' }) {
   try {
+    console.log('Attempting to send email with attachments:', {
+      to: template.to,
+      subject: template.subject,
+      fromEmail: FROM_EMAIL,
+      attachmentCount: attachments?.length || 0,
+      preventDuplicates: options?.preventDuplicates,
+      emailType: options?.emailType
+    })
+
     // Duplicate prevention logic
     if (options?.preventDuplicates && options?.emailType) {
       const emailKey = createEmailKey(template.to[0], template.subject, options.emailType)
@@ -637,23 +682,54 @@ export async function sendEmailWithAttachments(template: EmailTemplate, attachme
         filename: att.filename,
         content: att.url // Resend can fetch from URL
       }))
+      console.log('Adding attachments:', attachments.map(att => ({ filename: att.filename, url: att.url.substring(0, 50) + '...' })))
     }
+
+    console.log('Sending email with attachments via Resend:', {
+      from: emailData.from,
+      to: emailData.to,
+      subject: emailData.subject,
+      htmlLength: emailData.html.length,
+      attachmentCount: emailData.attachments?.length || 0
+    })
 
     const { data, error } = await resend.emails.send(emailData)
 
     if (error) {
+      console.error('Resend API error (with attachments):', error)
       throw new Error(`Failed to send email: ${error.message}`)
     }
 
+    console.log('Email with attachments sent successfully:', {
+      id: data?.id,
+      to: template.to,
+      subject: template.subject,
+      attachmentCount: emailData.attachments?.length || 0
+    })
+
     return data
   } catch (error) {
-    console.error('Email sending failed:', error)
+    console.error('Email sending with attachments failed:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      to: template.to,
+      subject: template.subject,
+      fromEmail: FROM_EMAIL,
+      attachmentCount: attachments?.length || 0
+    })
     throw error
   }
 }
 
 export async function sendEmail(template: EmailTemplate, options?: { preventDuplicates?: boolean, emailType?: 'form_submission' | 'payment_confirmation' }) {
   try {
+    console.log('Attempting to send email:', {
+      to: template.to,
+      subject: template.subject,
+      fromEmail: FROM_EMAIL,
+      preventDuplicates: options?.preventDuplicates,
+      emailType: options?.emailType
+    })
+
     // Duplicate prevention logic
     if (options?.preventDuplicates && options?.emailType) {
       const emailKey = createEmailKey(template.to[0], template.subject, options.emailType)
@@ -666,20 +742,41 @@ export async function sendEmail(template: EmailTemplate, options?: { preventDupl
       markEmailSent(emailKey)
     }
 
-    const { data, error } = await resend.emails.send({
+    const emailData = {
       from: FROM_EMAIL,
       to: template.to,
       subject: template.subject,
       html: template.html,
+    }
+
+    console.log('Sending email with Resend:', {
+      from: emailData.from,
+      to: emailData.to,
+      subject: emailData.subject,
+      htmlLength: emailData.html.length
     })
 
+    const { data, error } = await resend.emails.send(emailData)
+
     if (error) {
+      console.error('Resend API error:', error)
       throw new Error(`Failed to send email: ${error.message}`)
     }
 
+    console.log('Email sent successfully:', {
+      id: data?.id,
+      to: template.to,
+      subject: template.subject
+    })
+
     return data
   } catch (error) {
-    console.error('Email sending failed:', error)
+    console.error('Email sending failed:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      to: template.to,
+      subject: template.subject,
+      fromEmail: FROM_EMAIL
+    })
     throw error
   }
 }
