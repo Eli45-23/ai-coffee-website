@@ -26,40 +26,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Enhanced onboarding submission interface for database
-export interface EnhancedOnboardingSubmission {
-  id?: string
-  business_name: string
-  email: string
-  instagram_handle: string
-  other_platforms?: string
-  business_type: string
-  business_type_other?: string
-  product_categories: string[]
-  product_categories_other?: string
-  customer_questions: string[]
-  customer_questions_other?: string
-  delivery_pickup: 'delivery' | 'pickup' | 'both' | 'neither'
-  delivery_options?: string[]
-  delivery_options_other?: string
-  pickup_options?: string[]
-  pickup_options_other?: string
-  delivery_notes?: string
-  menu_file_url?: string
-  additional_docs_urls?: string[]
-  menu_description?: string
-  plan: 'starter' | 'pro' | 'pro_plus'
-  credential_sharing: 'direct' | 'sendsecurely' | 'call'
-  credentials_direct?: string
-  has_faqs: 'yes' | 'no'
-  faq_file_url?: string
-  faq_content?: string
-  consent_checkbox: boolean
-  source: string
-  payment_status: 'pending' | 'completed'
-  stripe_session_id?: string
-  created_at?: string
-}
 
 // Legacy form submission interface (keep for backward compatibility)
 export interface FormSubmission {
@@ -126,46 +92,19 @@ export async function getFormSubmissionByStripeSession(sessionId: string) {
   return data
 }
 
-// New enhanced onboarding functions
+// Client onboarding functions (used by legacy API and Stripe webhook)
 export async function createClientOnboardingSubmission(data: Omit<ClientOnboardingSubmission, 'id' | 'created_at'>) {
-  console.log('Attempting to save to client_onboarding table:', {
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing',
-    urlLength: process.env.NEXT_PUBLIC_SUPABASE_URL?.length,
-    dataKeys: Object.keys(data)
-  })
-  
-  try {
-    const { data: submission, error } = await supabase
-      .from('client_onboarding')
-      .insert([data])
-      .select()
-      .single()
+  const { data: submission, error } = await supabase
+    .from('client_onboarding')
+    .insert([data])
+    .select()
+    .single()
 
-    if (error) {
-      console.error('Supabase error details:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
-      })
-      throw new Error(`Failed to create client onboarding submission: ${error.message}`)
-    }
-
-    return submission
-  } catch (err) {
-    console.error('Full error in createClientOnboardingSubmission:', err)
-    if (err instanceof TypeError && err.message === 'fetch failed') {
-      console.error('Fetch failed - possible causes:')
-      console.error('1. Invalid Supabase URL format')
-      console.error('2. Network connectivity issues')
-      console.error('3. CORS issues (though this is server-side)')
-      console.error('URL format check:', {
-        hasHttps: process.env.NEXT_PUBLIC_SUPABASE_URL?.startsWith('https://'),
-        endsWithSupabaseCo: process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('.supabase.co')
-      })
-    }
-    throw err
+  if (error) {
+    throw new Error(`Failed to create client onboarding submission: ${error.message}`)
   }
+
+  return submission
 }
 
 export async function updateClientOnboardingSubmission(id: string, updates: Partial<ClientOnboardingSubmission>) {
@@ -250,60 +189,3 @@ export async function uploadMultipleFiles(
   return Promise.all(uploadPromises)
 }
 
-// Enhanced onboarding submission functions
-export async function createEnhancedOnboardingSubmission(data: Omit<EnhancedOnboardingSubmission, 'id' | 'created_at'>) {
-  const { data: submission, error } = await supabase
-    .from('enhanced_onboarding')
-    .insert([data])
-    .select()
-    .single()
-
-  if (error) {
-    throw new Error(`Failed to create enhanced onboarding submission: ${error.message}`)
-  }
-
-  return submission
-}
-
-export async function updateEnhancedOnboardingSubmission(id: string, updates: Partial<EnhancedOnboardingSubmission>) {
-  const { data, error } = await supabase
-    .from('enhanced_onboarding')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) {
-    throw new Error(`Failed to update enhanced onboarding submission: ${error.message}`)
-  }
-
-  return data
-}
-
-export async function getEnhancedOnboardingSubmissionByStripeSession(sessionId: string) {
-  const { data, error } = await supabase
-    .from('enhanced_onboarding')
-    .select('*')
-    .eq('stripe_session_id', sessionId)
-    .single()
-
-  if (error) {
-    throw new Error(`Failed to get enhanced onboarding submission: ${error.message}`)
-  }
-
-  return data
-}
-
-export async function getEnhancedOnboardingSubmissionById(id: string) {
-  const { data, error } = await supabase
-    .from('enhanced_onboarding')
-    .select('*')
-    .eq('id', id)
-    .single()
-
-  if (error) {
-    throw new Error(`Failed to get enhanced onboarding submission: ${error.message}`)
-  }
-
-  return data
-}
