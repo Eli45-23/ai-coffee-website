@@ -60,8 +60,8 @@ export const clientOnboardingFormSchema = z.object({
   
   // Menu Submission
   menu_text: z.string().optional(),
-  menu_file: z.instanceof(File).optional(),
-  additional_docs: z.array(z.instanceof(File)).optional(),
+  menu_file: z.any().optional(),
+  additional_docs: z.array(z.any()).optional(),
   
   // Plan Selection
   plan: z.enum(['starter', 'pro', 'pro_plus']),
@@ -71,7 +71,7 @@ export const clientOnboardingFormSchema = z.object({
   
   // FAQ Upload
   has_faqs: z.enum(['yes', 'no']),
-  faq_file: z.instanceof(File).optional(),
+  faq_file: z.any().optional(),
   
   // Contact & Consent
   email: z.string().email('Please enter a valid email address'),
