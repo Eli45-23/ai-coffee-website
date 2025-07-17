@@ -9,8 +9,8 @@ const pricingPlans: PricingPlan[] = [
   {
     id: 'starter',
     name: 'Starter',
-    price: STRIPE_PRICES.starter.amount,
-    currency: STRIPE_PRICES.starter.currency,
+    price: 10000, // $100
+    currency: 'usd',
     stripeUrl: 'https://buy.stripe.com/fZu5kEaZ4dQqbKUfNZ8Vi00',
     features: [
       'Instagram Automation (AI Q&A Bot)',
@@ -26,8 +26,8 @@ const pricingPlans: PricingPlan[] = [
   {
     id: 'pro',
     name: 'Pro',
-    price: STRIPE_PRICES.pro.amount,
-    currency: STRIPE_PRICES.pro.currency,
+    price: 15000, // $150
+    currency: 'usd',
     stripeUrl: 'https://buy.stripe.com/3cI5kE7MS13EcOY6dp8Vi01',
     popular: true,
     features: [
@@ -44,8 +44,8 @@ const pricingPlans: PricingPlan[] = [
   {
     id: 'pro_plus',
     name: 'Pro Plus',
-    price: STRIPE_PRICES.pro_plus.amount,
-    currency: STRIPE_PRICES.pro_plus.currency,
+    price: 20000, // $200
+    currency: 'usd',
     stripeUrl: 'https://buy.stripe.com/28EeVe9V06nY4is59l8Vi02',
     features: [
       'Everything in Pro',
