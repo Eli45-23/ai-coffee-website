@@ -1,29 +1,9 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// Debug logging for production
-if (typeof window !== 'undefined') {
-  console.log('Supabase URL:', supabaseUrl ? 'Present' : 'Missing')
-  console.log('Supabase Anon Key:', supabaseAnonKey ? 'Present' : 'Missing')
-  console.log('URL starts with https:', supabaseUrl?.startsWith('https://'))
-  console.log('Key length:', supabaseAnonKey?.length)
-}
-
-// Create Supabase client with error handling
-let supabase: SupabaseClient
-try {
-  supabase = createClient(supabaseUrl, supabaseAnonKey)
-  if (typeof window !== 'undefined') {
-    console.log('Supabase client created successfully')
-  }
-} catch (error) {
-  console.error('Error creating Supabase client:', error)
-  throw error
-}
-
-export { supabase }
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export interface FormSubmission {
   id?: string
