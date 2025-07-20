@@ -45,7 +45,10 @@ export default function EnhancedOnboardingForm({ initialPlan = 'starter' }: Enha
       plan: initialPlan,
       credential_sharing: 'sendsecurely',
       has_faqs: 'no',
-      consent_checkbox: false
+      consent_checkbox: false,
+      menu_file: undefined,
+      faq_file: undefined,
+      additional_docs: []
     },
   })
 
@@ -502,12 +505,16 @@ export default function EnhancedOnboardingForm({ initialPlan = 'starter' }: Enha
             <Controller
               name="menu_file"
               control={control}
-              render={({ field }) => (
+              render={({ field: { onChange, value, ...field } }) => (
                 <FormFileUpload
                   label="Upload Menu"
-                  onFileSelect={field.onChange}
-                  selectedFile={field.value}
+                  onFileSelect={(file) => {
+                    console.log('🍔 Menu file selected:', file ? { name: file.name, size: file.size, type: file.type } : null)
+                    onChange(file)
+                  }}
+                  selectedFile={value}
                   hint="Upload images or PDFs of your menu, services, or product catalog"
+                  {...field}
                 />
               )}
             />
@@ -515,13 +522,17 @@ export default function EnhancedOnboardingForm({ initialPlan = 'starter' }: Enha
             <Controller
               name="additional_docs"
               control={control}
-              render={({ field }) => (
+              render={({ field: { onChange, value, ...field } }) => (
                 <FormFileUpload
                   label="Upload Additional Documents"
-                  onFileSelect={(files) => field.onChange(files ? [files] : [])}
-                  selectedFile={field.value?.[0]}
+                  onFileSelect={(file) => {
+                    console.log('📄 Additional doc selected:', file ? { name: file.name, size: file.size, type: file.type } : null)
+                    onChange(file ? [file] : [])
+                  }}
+                  selectedFile={value?.[0]}
                   hint="Any additional documents, price lists, or reference materials"
                   multiple={false}
+                  {...field}
                 />
               )}
             />
@@ -628,12 +639,16 @@ export default function EnhancedOnboardingForm({ initialPlan = 'starter' }: Enha
                 <Controller
                   name="faq_file"
                   control={control}
-                  render={({ field }) => (
+                  render={({ field: { onChange, value, ...field } }) => (
                     <FormFileUpload
                       label="Upload FAQ Document"
-                      onFileSelect={field.onChange}
-                      selectedFile={field.value}
+                      onFileSelect={(file) => {
+                        console.log('❓ FAQ file selected:', file ? { name: file.name, size: file.size, type: file.type } : null)
+                        onChange(file)
+                      }}
+                      selectedFile={value}
                       hint="Upload your existing FAQ document (PDF, Word, or image)"
+                      {...field}
                     />
                   )}
                 />
