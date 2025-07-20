@@ -88,7 +88,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 payment_status: session.payment_status
               }
               const confirmationEmail = createPaymentConfirmationClientEmail(submission, stripeSessionData)
-              await sendEmail(confirmationEmail, { preventDuplicates: true, emailType: 'payment_confirmation' })
+              await sendEmail(confirmationEmail, { 
+                preventDuplicates: true, 
+                emailType: 'payment_confirmation',
+                uniqueId: session.id 
+              })
               console.log(`Payment confirmation email sent to ${submission.email}`)
             } catch (emailError) {
               console.error('Failed to send payment confirmation email:', emailError)
@@ -107,7 +111,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 metadata: session.metadata
               }
               const adminEmail = createPaymentConfirmationAdminEmail(submission, stripeSessionData)
-              await sendEmail(adminEmail, { preventDuplicates: true, emailType: 'payment_confirmation' })
+              await sendEmail(adminEmail, { 
+                preventDuplicates: true, 
+                emailType: 'payment_confirmation',
+                uniqueId: session.id 
+              })
               
               const businessName = isEnhancedOnboarding ? submission.business_name : submission.name
               console.log(`Payment admin notification sent for ${businessName}`)

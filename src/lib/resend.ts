@@ -713,8 +713,9 @@ export function createPaymentConfirmationAdminEmail(submission: EnhancedFormSubm
 // In production, you might want to use Redis or database
 const emailSentStore = new Map<string, number>()
 
-function createEmailKey(to: string, subject: string, type: 'form_submission' | 'payment_confirmation'): string {
-  return `${type}:${to}:${subject.replace(/[^\w\s]/gi, '')}`
+function createEmailKey(to: string, subject: string, type: 'form_submission' | 'payment_confirmation', uniqueId?: string): string {
+  const baseKey = `${type}:${to}:${subject.replace(/[^\w\s]/gi, '')}`
+  return uniqueId ? `${baseKey}:${uniqueId}` : baseKey
 }
 
 function isDuplicateEmail(key: string, cooldownMinutes: number = 5): boolean {
@@ -741,7 +742,7 @@ function markEmailSent(key: string): void {
   keysToDelete.forEach(k => emailSentStore.delete(k))
 }
 
-export async function sendEmailWithAttachments(template: EmailTemplate, attachments?: Array<{ filename: string; url: string }>, options?: { preventDuplicates?: boolean, emailType?: 'form_submission' | 'payment_confirmation' }) {
+export async function sendEmailWithAttachments(template: EmailTemplate, attachments?: Array<{ filename: string; url: string }>, options?: { preventDuplicates?: boolean, emailType?: 'form_submission' | 'payment_confirmation', uniqueId?: string }) {
   try {
     // Check if this is an admin email
     const isAdminEmail = template.to.includes(ADMIN_EMAIL)
@@ -768,19 +769,21 @@ export async function sendEmailWithAttachments(template: EmailTemplate, attachme
 
     // Duplicate prevention logic
     if (options?.preventDuplicates && options?.emailType) {
-      const emailKey = createEmailKey(template.to[0], template.subject, options.emailType)
+      const emailKey = createEmailKey(template.to[0], template.subject, options.emailType, options.uniqueId)
       
       if (isDuplicateEmail(emailKey)) {
-        console.log(`Skipping duplicate email: ${template.subject} to ${template.to[0]}`)
+        console.log(`Skipping duplicate email: ${template.subject} to ${template.to[0]} (key: ${emailKey})`)
         if (isAdminEmail) {
           logAdminEmailOperation('Duplicate Skipped (with Attachments)', {
             subject: template.subject,
-            reason: 'Duplicate prevention triggered'
+            reason: 'Duplicate prevention triggered',
+            emailKey: emailKey
           })
         }
         return { duplicate: true, skipped: true }
       }
       
+      console.log(`Email not duplicate, proceeding with send (key: ${emailKey})`)
       markEmailSent(emailKey)
     }
 
@@ -869,7 +872,7 @@ export async function sendEmailWithAttachments(template: EmailTemplate, attachme
   }
 }
 
-export async function sendEmail(template: EmailTemplate, options?: { preventDuplicates?: boolean, emailType?: 'form_submission' | 'payment_confirmation' }) {
+export async function sendEmail(template: EmailTemplate, options?: { preventDuplicates?: boolean, emailType?: 'form_submission' | 'payment_confirmation', uniqueId?: string }) {
   try {
     // Check if this is an admin email
     const isAdminEmail = template.to.includes(ADMIN_EMAIL)
@@ -893,19 +896,21 @@ export async function sendEmail(template: EmailTemplate, options?: { preventDupl
 
     // Duplicate prevention logic
     if (options?.preventDuplicates && options?.emailType) {
-      const emailKey = createEmailKey(template.to[0], template.subject, options.emailType)
+      const emailKey = createEmailKey(template.to[0], template.subject, options.emailType, options.uniqueId)
       
       if (isDuplicateEmail(emailKey)) {
-        console.log(`Skipping duplicate email: ${template.subject} to ${template.to[0]}`)
+        console.log(`Skipping duplicate email: ${template.subject} to ${template.to[0]} (key: ${emailKey})`)
         if (isAdminEmail) {
           logAdminEmailOperation('Duplicate Skipped', {
             subject: template.subject,
-            reason: 'Duplicate prevention triggered'
+            reason: 'Duplicate prevention triggered',
+            emailKey: emailKey
           })
         }
         return { duplicate: true, skipped: true }
       }
       
+      console.log(`Email not duplicate, proceeding with send (key: ${emailKey})`)
       markEmailSent(emailKey)
     }
 

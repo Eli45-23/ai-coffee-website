@@ -2,6 +2,16 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { sendEmail, sendEmailWithAttachments, createEnhancedWelcomeEmail, createEnhancedAdminNotificationEmail, EnhancedFormSubmission } from '@/lib/resend'
 import { ClientOnboardingSubmission, EnhancedOnboardingFormData } from '@/types'
 
+// Helper function to validate file URLs are accessible
+async function validateFileUrl(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url, { method: 'HEAD' })
+    return response.ok
+  } catch {
+    return false
+  }
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, message: 'Method not allowed' })
@@ -27,21 +37,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Create enhanced form submission object for emails
+    // Use file URLs from the database submission (they're already saved there)
     const enhancedSubmission: EnhancedFormSubmission = {
       ...formData,
-      menuFileUrl: fileUrls.menuFileUrl,
-      faqFileUrl: fileUrls.faqFileUrl,
-      additionalDocsUrls: fileUrls.additionalDocsUrls,
+      menuFileUrl: submission.menu_file_url || fileUrls.menuFileUrl,
+      faqFileUrl: submission.faq_file_url || fileUrls.faqFileUrl,
+      additionalDocsUrls: submission.additional_docs_urls || fileUrls.additionalDocsUrls || [],
       submissionId: submission.id!
     }
 
+    // Log the file URLs for debugging
+    console.log('File URLs for email:', {
+      menuFileUrl: enhancedSubmission.menuFileUrl,
+      faqFileUrl: enhancedSubmission.faqFileUrl,
+      additionalDocsCount: enhancedSubmission.additionalDocsUrls?.length || 0,
+      submissionId: submission.id
+    })
+
     // Send welcome email to customer
     try {
+      console.log(`Sending welcome email for plan: ${formData.plan} to ${formData.email}`)
       const welcomeEmail = createEnhancedWelcomeEmail(enhancedSubmission)
-      await sendEmail(welcomeEmail, { preventDuplicates: true, emailType: 'form_submission' })
-      console.log(`Welcome email sent to ${formData.email}`)
+      await sendEmail(welcomeEmail, { 
+        preventDuplicates: true, 
+        emailType: 'form_submission',
+        uniqueId: submission.id // Add submission ID for better duplicate prevention
+      })
+      console.log(`✅ Welcome email sent to ${formData.email} for ${formData.business_name} (Plan: ${formData.plan})`)
     } catch (emailError) {
-      console.error('Failed to send welcome email:', emailError)
+      console.error(`❌ Failed to send welcome email for ${formData.plan} plan:`, {
+        error: emailError instanceof Error ? emailError.message : 'Unknown error',
+        email: formData.email,
+        businessName: formData.business_name,
+        plan: formData.plan
+      })
       // Don't fail the entire request if email fails
     }
 
@@ -55,18 +84,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       const adminEmail = createEnhancedAdminNotificationEmail(enhancedSubmission)
       
-      // Prepare attachments for admin email
+      // Prepare attachments for admin email and validate URLs
       const attachments = []
-      if (fileUrls.menuFileUrl) {
-        attachments.push({ filename: 'menu-document', url: fileUrls.menuFileUrl })
+      if (enhancedSubmission.menuFileUrl) {
+        const isValid = await validateFileUrl(enhancedSubmission.menuFileUrl)
+        if (isValid) {
+          attachments.push({ filename: 'menu-document', url: enhancedSubmission.menuFileUrl })
+        } else {
+          console.warn(`Menu file URL not accessible: ${enhancedSubmission.menuFileUrl}`)
+        }
       }
-      if (fileUrls.faqFileUrl) {
-        attachments.push({ filename: 'faq-document', url: fileUrls.faqFileUrl })
+      if (enhancedSubmission.faqFileUrl) {
+        const isValid = await validateFileUrl(enhancedSubmission.faqFileUrl)
+        if (isValid) {
+          attachments.push({ filename: 'faq-document', url: enhancedSubmission.faqFileUrl })
+        } else {
+          console.warn(`FAQ file URL not accessible: ${enhancedSubmission.faqFileUrl}`)
+        }
       }
-      if (fileUrls.additionalDocsUrls && fileUrls.additionalDocsUrls.length > 0) {
-        fileUrls.additionalDocsUrls.forEach((url, index) => {
-          attachments.push({ filename: `additional-document-${index + 1}`, url })
-        })
+      if (enhancedSubmission.additionalDocsUrls && enhancedSubmission.additionalDocsUrls.length > 0) {
+        for (let i = 0; i < enhancedSubmission.additionalDocsUrls.length; i++) {
+          const url = enhancedSubmission.additionalDocsUrls[i]
+          const isValid = await validateFileUrl(url)
+          if (isValid) {
+            attachments.push({ filename: `additional-document-${i + 1}`, url })
+          } else {
+            console.warn(`Additional document URL not accessible: ${url}`)
+          }
+        }
       }
 
       console.log('Sending admin notification with form data:', {
@@ -74,17 +119,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         email: formData.email,
         plan: formData.plan,
         attachmentCount: attachments.length,
-        hasMenuFile: !!fileUrls.menuFileUrl,
-        hasFaqFile: !!fileUrls.faqFileUrl,
-        additionalDocsCount: fileUrls.additionalDocsUrls?.length || 0
+        hasMenuFile: !!enhancedSubmission.menuFileUrl,
+        hasFaqFile: !!enhancedSubmission.faqFileUrl,
+        additionalDocsCount: enhancedSubmission.additionalDocsUrls?.length || 0,
+        validAttachments: attachments.map(a => a.filename)
       })
 
       if (attachments.length > 0) {
-        await sendEmailWithAttachments(adminEmail, attachments, { preventDuplicates: true, emailType: 'form_submission' })
+        await sendEmailWithAttachments(adminEmail, attachments, { 
+          preventDuplicates: true, 
+          emailType: 'form_submission',
+          uniqueId: submission.id // Add submission ID for better duplicate prevention
+        })
       } else {
-        await sendEmail(adminEmail, { preventDuplicates: true, emailType: 'form_submission' })
+        await sendEmail(adminEmail, { 
+          preventDuplicates: true, 
+          emailType: 'form_submission',
+          uniqueId: submission.id
+        })
       }
-      console.log(`✅ Admin notification sent successfully for ${formData.business_name} with ${attachments.length} attachments`)
+      console.log(`✅ Admin notification sent successfully for ${formData.business_name} (Plan: ${formData.plan}) with ${attachments.length} attachments`)
     } catch (emailError) {
       console.error('❌ Failed to send admin notification:', {
         error: emailError instanceof Error ? emailError.message : 'Unknown error',
@@ -94,9 +148,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Don't fail the entire request if email fails
     }
 
+    // Final status log
+    console.log(`✅ Enhanced onboarding completed for ${formData.business_name}:`, {
+      submissionId: submission.id,
+      plan: formData.plan,
+      welcomeEmailSent: true,
+      adminEmailSent: true,
+      hasMenuFile: !!enhancedSubmission.menuFileUrl,
+      hasFaqFile: !!enhancedSubmission.faqFileUrl,
+      additionalDocsCount: enhancedSubmission.additionalDocsUrls?.length || 0
+    })
+
     res.status(200).json({
       success: true,
       message: 'Notification emails sent successfully',
+      submissionId: submission.id,
+      emailsSent: {
+        welcome: true,
+        admin: true
+      }
     })
 
   } catch (error) {

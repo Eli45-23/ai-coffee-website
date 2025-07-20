@@ -137,7 +137,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         login_sharing_preference: 'direct' // Default value for legacy compatibility
       }
       const welcomeEmail = createWelcomeEmail(emailData)
-      await sendEmail(welcomeEmail)
+      await sendEmail(welcomeEmail, { 
+        preventDuplicates: true, 
+        emailType: 'form_submission',
+        uniqueId: submission.id 
+      })
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError)
       // Don't fail the entire request if email fails
@@ -157,7 +161,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         login_sharing_preference: 'direct' // Default value for legacy compatibility
       }
       const adminEmail = createAdminNotificationEmail(emailData)
-      await sendEmail(adminEmail)
+      await sendEmail(adminEmail, { 
+        preventDuplicates: true, 
+        emailType: 'form_submission',
+        uniqueId: submission.id 
+      })
     } catch (emailError) {
       console.error('Failed to send admin notification:', emailError)
       // Don't fail the entire request if email fails

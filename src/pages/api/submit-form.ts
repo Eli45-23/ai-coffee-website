@@ -65,7 +65,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Send welcome email to customer
     try {
       const welcomeEmail = createWelcomeEmail(submission)
-      await sendEmail(welcomeEmail)
+      await sendEmail(welcomeEmail, { 
+        preventDuplicates: true, 
+        emailType: 'form_submission',
+        uniqueId: submission.id 
+      })
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError)
       // Don't fail the entire request if email fails
@@ -74,7 +78,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Send notification email to admin
     try {
       const adminEmail = createAdminNotificationEmail(submission)
-      await sendEmail(adminEmail)
+      await sendEmail(adminEmail, { 
+        preventDuplicates: true, 
+        emailType: 'form_submission',
+        uniqueId: submission.id 
+      })
     } catch (emailError) {
       console.error('Failed to send admin notification:', emailError)
       // Don't fail the entire request if email fails
