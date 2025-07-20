@@ -159,14 +159,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     console.log('🚀 Starting enhanced onboarding submission with file uploads')
+    console.log('🌍 Environment check:', {
+      supabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      supabaseKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      nodeEnv: process.env.NODE_ENV
+    })
     
     // Step 1: Parse multipart form data
+    console.log('📥 Parsing incoming request...')
     const { fields, files } = await parseFormData(req)
     
     console.log('📝 Form data parsed:', {
       fieldCount: Object.keys(fields).length,
       fileCount: Object.keys(files).length,
-      files: Object.keys(files)
+      fileFieldNames: Object.keys(files),
+      fieldsKeys: Object.keys(fields).slice(0, 10) // Show first 10 field names
+    })
+
+    // Detailed file debugging
+    Object.entries(files).forEach(([fieldName, file]) => {
+      if (Array.isArray(file)) {
+        console.log(`📁 File field '${fieldName}': Array with ${file.length} files`)
+        file.forEach((f, index) => {
+          console.log(`  [${index}] ${f.originalFilename || f.newFilename} (${f.size} bytes, ${f.mimetype})`)
+        })
+      } else if (file) {
+        console.log(`📁 File field '${fieldName}': Single file`)
+        console.log(`  ${file.originalFilename || file.newFilename} (${file.size} bytes, ${file.mimetype})`)
+      }
     })
 
     // Helper function to extract field value
