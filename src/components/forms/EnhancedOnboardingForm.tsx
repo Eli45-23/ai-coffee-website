@@ -232,12 +232,20 @@ export default function EnhancedOnboardingForm({ initialPlan = 'starter' }: Enha
       })
 
       console.log('📤 Sending form data to server for processing')
+      console.log('🌐 Making fetch request with:', {
+        method: 'POST',
+        url: '/api/enhanced-onboarding',
+        bodyType: 'FormData',
+        contentType: 'multipart/form-data (automatic)'
+      })
 
       // Step 2: Submit everything to the API (file upload + database save + emails)
       const response = await fetch('/api/enhanced-onboarding', {
         method: 'POST',
         body: formData, // Send FormData (not JSON)
       })
+
+      console.log('📨 Server response status:', response.status, response.statusText)
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
