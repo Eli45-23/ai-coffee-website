@@ -107,6 +107,26 @@ export default function EnhancedOnboardingForm({ initialPlan = 'starter' }: Enha
 
     try {
       console.log('🚀 Starting form submission with server-side file upload')
+      console.log('📋 React Hook Form data before FormData conversion:', {
+        hasMenuFile: !!data.menu_file,
+        hasFaqFile: !!data.faq_file,
+        hasAdditionalDocs: !!data.additional_docs,
+        menuFile: data.menu_file ? {
+          name: data.menu_file.name,
+          size: data.menu_file.size,
+          type: data.menu_file.type
+        } : null,
+        faqFile: data.faq_file ? {
+          name: data.faq_file.name,
+          size: data.faq_file.size,
+          type: data.faq_file.type
+        } : null,
+        additionalDocs: data.additional_docs ? data.additional_docs.map(f => ({
+          name: f.name,
+          size: f.size,
+          type: f.type
+        })) : []
+      })
 
       // Step 1: Create FormData to send all data and files to the API
       const formData = new FormData()
