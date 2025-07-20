@@ -12,6 +12,38 @@ export const config = {
   },
 }
 
+// Type guard to check if object is a valid formidable File
+function isValidFormidableFile(file: unknown): file is formidable.File {
+  return (
+    typeof file === 'object' &&
+    file !== null &&
+    'originalFilename' in file &&
+    'newFilename' in file &&
+    'filepath' in file
+  )
+}
+
+// Helper function to safely extract file metadata
+function getFileMetadata(file: unknown): {
+  name: string
+  size: number
+  type: string
+} {
+  if (!isValidFormidableFile(file)) {
+    return {
+      name: 'unknown',
+      size: 0,
+      type: 'unknown'
+    }
+  }
+
+  return {
+    name: file.originalFilename || file.newFilename || 'unnamed-file',
+    size: file.size || 0,
+    type: file.mimetype || 'unknown'
+  }
+}
+
 // Helper function to safely extract filename from formidable file
 function getFileName(file: formidable.File | formidable.File[] | undefined): string {
   if (!file) return 'unknown'
@@ -60,12 +92,13 @@ async function safeUploadFile(
   const correlationId = Math.random().toString(36).substring(2, 8)
   
   try {
+    const metadata = getFileMetadata(file)
     console.log(`🚀 [${correlationId}] Attempting ${fileType} file upload:`, {
       bucket,
       folder,
-      fileName: getFileName(file),
-      fileSize: file.size || 0,
-      fileType: file.mimetype || 'unknown'
+      fileName: metadata.name,
+      fileSize: metadata.size,
+      fileType: metadata.type
     })
     
     const url = await uploadFileToSupabase(file, bucket, folder)
@@ -73,19 +106,20 @@ async function safeUploadFile(
     console.log(`✅ [${correlationId}] ${fileType} file upload successful:`, {
       url: url.substring(0, 50) + '...',
       bucket,
-      originalName: file.originalFilename
+      originalName: metadata.name
     })
     
     return { success: true, url }
     
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown upload error'
+    const metadata = getFileMetadata(file)
     
     console.error(`❌ [${correlationId}] ${fileType} file upload failed:`, {
       error: errorMessage,
       bucket,
-      fileName: getFileName(file),
-      fileSize: file.size || 0,
+      fileName: metadata.name,
+      fileSize: metadata.size,
       impact: 'Continuing without this file'
     })
     
@@ -108,11 +142,7 @@ async function safeUploadMultipleFiles(
     bucket,
     folder,
     fileCount: files.length,
-    files: files.map(f => ({
-      name: getFileName(f),
-      size: f.size || 0,
-      type: f.mimetype || 'unknown'
-    }))
+    files: files.map(f => getFileMetadata(f))
   })
   
   try {
@@ -203,16 +233,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       fieldsKeys: Object.keys(fields).slice(0, 10)
     })
 
-    // Log file details for debugging
+    // Log file details for debugging with proper type guards
     Object.entries(files).forEach(([fieldName, file]) => {
       if (Array.isArray(file)) {
         console.log(`📁 [${requestId}] File field '${fieldName}': Array with ${file.length} files`)
         file.forEach((f, index) => {
-          console.log(`  [${index}] ${getFileName(f)} (${f.size || 0} bytes, ${f.mimetype || 'unknown'})`)
+          if (isValidFormidableFile(f)) {
+            const metadata = getFileMetadata(f)
+            console.log(`  [${index}] ${metadata.name} (${metadata.size} bytes, ${metadata.type})`)
+          } else {
+            console.log(`  [${index}] file metadata unavailable`)
+          }
         })
       } else if (file) {
         console.log(`📁 [${requestId}] File field '${fieldName}': Single file`)
-        console.log(`  ${getFileName(file)} (${file.size || 0} bytes, ${file.mimetype || 'unknown'})`)
+        if (isValidFormidableFile(file)) {
+          const metadata = getFileMetadata(file)
+          console.log(`  ${metadata.name} (${metadata.size} bytes, ${metadata.type})`)
+        } else {
+          console.log(`  file metadata unavailable`)
+        }
       }
     })
 
@@ -289,12 +329,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       operationResults.menuFileUpload.attempted = true
       const menuFile = Array.isArray(files.menu_file) ? files.menu_file[0] : files.menu_file
       
-      console.log(`📤 [${requestId}] Attempting menu file upload...`)
-      const menuResult = await safeUploadFile(menuFile, 'menus', 'menus', 'menu')
-      
-      operationResults.menuFileUpload.success = menuResult.success
-      operationResults.menuFileUpload.url = menuResult.url || null
-      operationResults.menuFileUpload.error = menuResult.error || null
+      if (isValidFormidableFile(menuFile)) {
+        console.log(`📤 [${requestId}] Attempting menu file upload...`)
+        const menuResult = await safeUploadFile(menuFile, 'menus', 'menus', 'menu')
+        
+        operationResults.menuFileUpload.success = menuResult.success
+        operationResults.menuFileUpload.url = menuResult.url || null
+        operationResults.menuFileUpload.error = menuResult.error || null
+      } else {
+        console.error(`❌ [${requestId}] Invalid menu file object`)
+        operationResults.menuFileUpload.error = 'Invalid file object'
+      }
     } else {
       console.log(`ℹ️ [${requestId}] No menu file provided in form submission`)
     }
@@ -304,12 +349,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       operationResults.faqFileUpload.attempted = true
       const faqFile = Array.isArray(files.faq_file) ? files.faq_file[0] : files.faq_file
       
-      console.log(`📤 [${requestId}] Attempting FAQ file upload...`)
-      const faqResult = await safeUploadFile(faqFile, 'faqs', 'faqs', 'FAQ')
-      
-      operationResults.faqFileUpload.success = faqResult.success
-      operationResults.faqFileUpload.url = faqResult.url || null
-      operationResults.faqFileUpload.error = faqResult.error || null
+      if (isValidFormidableFile(faqFile)) {
+        console.log(`📤 [${requestId}] Attempting FAQ file upload...`)
+        const faqResult = await safeUploadFile(faqFile, 'faqs', 'faqs', 'FAQ')
+        
+        operationResults.faqFileUpload.success = faqResult.success
+        operationResults.faqFileUpload.url = faqResult.url || null
+        operationResults.faqFileUpload.error = faqResult.error || null
+      } else {
+        console.error(`❌ [${requestId}] Invalid FAQ file object`)
+        operationResults.faqFileUpload.error = 'Invalid file object'
+      }
     } else {
       console.log(`ℹ️ [${requestId}] No FAQ file provided in form submission`)
     }
@@ -319,12 +369,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       operationResults.additionalDocsUpload.attempted = true
       const additionalFiles = Array.isArray(files.additional_docs) ? files.additional_docs : [files.additional_docs]
       
-      console.log(`📤 [${requestId}] Attempting additional documents upload...`)
-      const docsResult = await safeUploadMultipleFiles(additionalFiles, 'documents', 'documents', 'additional documents')
+      // Filter to only valid formidable files
+      const validFiles = additionalFiles.filter(isValidFormidableFile)
       
-      operationResults.additionalDocsUpload.success = docsResult.success
-      operationResults.additionalDocsUpload.urls = docsResult.urls
-      operationResults.additionalDocsUpload.errors = docsResult.errors
+      if (validFiles.length > 0) {
+        console.log(`📤 [${requestId}] Attempting additional documents upload...`)
+        const docsResult = await safeUploadMultipleFiles(validFiles, 'documents', 'documents', 'additional documents')
+        
+        operationResults.additionalDocsUpload.success = docsResult.success
+        operationResults.additionalDocsUpload.urls = docsResult.urls
+        operationResults.additionalDocsUpload.errors = docsResult.errors
+      } else {
+        console.error(`❌ [${requestId}] No valid additional document files found`)
+        operationResults.additionalDocsUpload.errors = ['No valid file objects']
+      }
     } else {
       console.log(`ℹ️ [${requestId}] No additional documents provided in form submission`)
     }
