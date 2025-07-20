@@ -250,6 +250,42 @@ export interface EnhancedFormSubmission {
   submissionId: string
 }
 
+// Helper function to detect if URL points to an image
+function isImageUrl(url: string): boolean {
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp']
+  const lowercaseUrl = url.toLowerCase()
+  return imageExtensions.some(ext => lowercaseUrl.includes(ext))
+}
+
+// Helper function to sanitize URL for safe embedding
+function sanitizeUrl(url: string): string {
+  try {
+    const urlObj = new URL(url)
+    // Only allow http and https protocols
+    if (!['http:', 'https:'].includes(urlObj.protocol)) {
+      return '#'
+    }
+    return url
+  } catch {
+    return '#'
+  }
+}
+
+// Helper function to get file name from URL
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function getFileNameFromUrl(url: string): string {
+  try {
+    const urlObj = new URL(url)
+    const pathParts = urlObj.pathname.split('/')
+    const fileName = pathParts[pathParts.length - 1]
+    // Remove timestamp prefix if present (e.g., "1234567890-abc123.pdf" -> "document.pdf")
+    const cleanName = fileName.replace(/^\d+-[a-z0-9]+\./, 'document.')
+    return cleanName || 'document'
+  } catch {
+    return 'document'
+  }
+}
+
 export function createEnhancedAdminNotificationEmail(submission: EnhancedFormSubmission): EmailTemplate {
   const planNames = {
     starter: 'Starter – $100/month',
@@ -267,12 +303,6 @@ export function createEnhancedAdminNotificationEmail(submission: EnhancedFormSub
 
   const productCategoriesText = submission.product_categories.join(', ') + (submission.product_categories_other ? `, ${submission.product_categories_other}` : '')
   const customerQuestionsText = submission.customer_questions.join(', ') + (submission.customer_questions_other ? `, ${submission.customer_questions_other}` : '')
-
-  const attachedFiles = [
-    submission.menuFileUrl ? 'Menu' : null,
-    submission.faqFileUrl ? 'FAQs' : null,
-    ...(submission.additionalDocsUrls?.map((_, index) => `Document ${index + 1}`) || [])
-  ].filter(Boolean)
 
   return {
     to: [ADMIN_EMAIL],
@@ -338,9 +368,38 @@ export function createEnhancedAdminNotificationEmail(submission: EnhancedFormSub
             <div style="margin-bottom: 32px;">
               <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #00D0FF; padding-bottom: 8px;">▪️ Menu & Docs</h2>
               <div style="background: #fef2f2; padding: 20px; border-radius: 8px; border-left: 4px solid #00D0FF;">
-                ${submission.menuFileUrl ? '<p style="margin: 0 0 8px 0; color: #374151;"><strong>Menu uploaded:</strong> ✅</p>' : '<p style="margin: 0 0 8px 0; color: #374151;"><strong>Menu uploaded:</strong> ❌</p>'}
+                ${submission.menuFileUrl ? `
+                  <div style="margin-bottom: 16px;">
+                    <p style="margin: 0 0 8px 0; color: #374151;"><strong>📄 Menu File:</strong></p>
+                    ${isImageUrl(submission.menuFileUrl) ? `
+                      <div style="margin: 8px 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                        <img src="${sanitizeUrl(submission.menuFileUrl)}" alt="Menu Image" style="max-width: 100%; height: auto; display: block;" />
+                      </div>
+                    ` : `
+                      <a href="${sanitizeUrl(submission.menuFileUrl)}" style="display: inline-block; background: #00D0FF; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 500; margin: 4px 0;">📥 Download Menu</a>
+                    `}
+                  </div>
+                ` : '<p style="margin: 0 0 8px 0; color: #374151;"><strong>Menu uploaded:</strong> ❌</p>'}
+                
                 ${submission.menu_description ? `<p style="margin: 0 0 8px 0; color: #374151;"><strong>Additional Notes:</strong> "${submission.menu_description}"</p>` : ''}
-                ${attachedFiles.length ? `<p style="margin: 0; color: #374151;"><strong>Files:</strong> ${attachedFiles.join(', ')}</p>` : ''}
+                
+                ${submission.additionalDocsUrls && submission.additionalDocsUrls.length > 0 ? `
+                  <div style="margin-top: 16px;">
+                    <p style="margin: 0 0 8px 0; color: #374151;"><strong>📎 Additional Documents:</strong></p>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                      ${submission.additionalDocsUrls.map((url, index) => 
+                        isImageUrl(url) ? `
+                          <div style="margin: 8px 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; max-width: 200px;">
+                            <img src="${sanitizeUrl(url)}" alt="Document ${index + 1}" style="width: 100%; height: auto; display: block;" />
+                            <p style="margin: 0; padding: 4px 8px; background: #f3f4f6; color: #374151; font-size: 12px; text-align: center;">Document ${index + 1}</p>
+                          </div>
+                        ` : `
+                          <a href="${sanitizeUrl(url)}" style="display: inline-block; background: #6366f1; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 14px;">📄 Document ${index + 1}</a>
+                        `
+                      ).join('')}
+                    </div>
+                  </div>
+                ` : ''}
               </div>
             </div>
 
@@ -365,8 +424,19 @@ export function createEnhancedAdminNotificationEmail(submission: EnhancedFormSub
             <div style="margin-bottom: 32px;">
               <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #10F2B0; padding-bottom: 8px;">▪️ FAQs</h2>
               <div style="background: #fdf2f8; padding: 20px; border-radius: 8px; border-left: 4px solid #10F2B0;">
-                ${submission.faqFileUrl ? '<p style="margin: 0 0 8px 0; color: #374151;"><strong>File uploaded:</strong> ✅</p>' : '<p style="margin: 0 0 8px 0; color: #374151;"><strong>File uploaded:</strong> ❌</p>'}
-                ${submission.faq_content ? `<p style="margin: 0; color: #374151;"><strong>Text:</strong> "${submission.faq_content.substring(0, 100)}${submission.faq_content.length > 100 ? '...' : ''}"</p>` : ''}
+                ${submission.faqFileUrl ? `
+                  <div style="margin-bottom: 12px;">
+                    <p style="margin: 0 0 8px 0; color: #374151;"><strong>📄 FAQ File:</strong></p>
+                    ${isImageUrl(submission.faqFileUrl) ? `
+                      <div style="margin: 8px 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                        <img src="${sanitizeUrl(submission.faqFileUrl)}" alt="FAQ Image" style="max-width: 100%; height: auto; display: block;" />
+                      </div>
+                    ` : `
+                      <a href="${sanitizeUrl(submission.faqFileUrl)}" style="display: inline-block; background: #10F2B0; color: #064e3b; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 500;">📥 Download FAQs</a>
+                    `}
+                  </div>
+                ` : '<p style="margin: 0 0 8px 0; color: #374151;"><strong>File uploaded:</strong> ❌</p>'}
+                ${submission.faq_content ? `<p style="margin: 0; color: #374151;"><strong>Text Content:</strong> "${submission.faq_content.substring(0, 100)}${submission.faq_content.length > 100 ? '...' : ''}"</p>` : ''}
               </div>
             </div>
 
