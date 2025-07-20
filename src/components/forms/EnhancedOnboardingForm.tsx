@@ -8,11 +8,9 @@ import {
   BUSINESS_TYPES,
   CUSTOMER_QUESTIONS,
   DELIVERY_OPTIONS,
-  PICKUP_OPTIONS,
-  ClientOnboardingSubmission
+  PICKUP_OPTIONS
 } from '@/types'
 import { getStripeCheckoutUrl } from '@/lib/stripe'
-import { supabaseClient, uploadFileToSupabaseStorage, uploadMultipleFilesToStorage } from '@/lib/supabase-client'
 import FormInput from '@/components/ui/FormInput'
 import FormTextarea from '@/components/ui/FormTextarea'
 import FormDropdown from '@/components/ui/FormDropdown'
@@ -108,139 +106,98 @@ export default function EnhancedOnboardingForm({ initialPlan = 'starter' }: Enha
     setIsSubmitting(true)
 
     try {
-      // Step 1: Upload files to Supabase storage
-      let menuFileUrl: string | undefined
-      let faqFileUrl: string | undefined
-      let additionalDocsUrls: string[] = []
+      console.log('🚀 Starting form submission with server-side file upload')
 
-      // Upload menu file if present
-      if (data.menu_file) {
-        try {
-          menuFileUrl = await uploadFileToSupabaseStorage(data.menu_file, 'menus', 'menus')
-        } catch (error) {
-          console.error('Menu file upload error:', error)
-          throw new Error('Failed to upload menu file. Please try again.')
-        }
-      }
+      // Step 1: Create FormData to send all data and files to the API
+      const formData = new FormData()
 
-      // Upload FAQ file if present
-      if (data.faq_file) {
-        try {
-          faqFileUrl = await uploadFileToSupabaseStorage(data.faq_file, 'documents', 'documents')
-        } catch (error) {
-          console.error('FAQ file upload error:', error)
-          throw new Error('Failed to upload FAQ file. Please try again.')
-        }
-      }
+      // Add all form fields
+      formData.append('business_name', data.business_name)
+      formData.append('email', data.email)
+      formData.append('instagram_handle', data.instagram_handle)
+      if (data.other_platforms) formData.append('other_platforms', data.other_platforms)
+      formData.append('business_type', data.business_type)
+      if (data.business_type_other) formData.append('business_type_other', data.business_type_other)
+      
+      // Handle arrays for product categories and customer questions
+      data.product_categories.forEach(category => {
+        formData.append('product_categories', category)
+      })
+      if (data.product_categories_other) formData.append('product_categories_other', data.product_categories_other)
+      
+      data.customer_questions.forEach(question => {
+        formData.append('customer_questions', question)
+      })
+      if (data.customer_questions_other) formData.append('customer_questions_other', data.customer_questions_other)
 
-      // Upload additional documents if present
-      if (data.additional_docs && data.additional_docs.length > 0) {
-        try {
-          additionalDocsUrls = await uploadMultipleFilesToStorage(data.additional_docs, 'documents', 'documents')
-        } catch (error) {
-          console.error('Additional docs upload error:', error)
-          throw new Error('Failed to upload additional documents. Please try again.')
-        }
-      }
-
-      // Step 2: Prepare delivery/pickup info as text (to match database schema)
-      let deliveryInfo = data.delivery_pickup
-      if (data.delivery_pickup === 'delivery' || data.delivery_pickup === 'both') {
-        const deliveryOpts = data.delivery_options || []
-        if (deliveryOpts.length > 0) {
-          deliveryInfo += ` - Delivery: ${deliveryOpts.join(', ')}`
-          if (data.delivery_options_other) {
-            deliveryInfo += ` (${data.delivery_options_other})`
-          }
-        }
-      }
-      if (data.delivery_pickup === 'pickup' || data.delivery_pickup === 'both') {
-        const pickupOpts = data.pickup_options || []
-        if (pickupOpts.length > 0) {
-          deliveryInfo += ` - Pickup: ${pickupOpts.join(', ')}`
-          if (data.pickup_options_other) {
-            deliveryInfo += ` (${data.pickup_options_other})`
-          }
-        }
-      }
-      if (data.delivery_notes) {
-        deliveryInfo += ` - Notes: ${data.delivery_notes}`
-      }
-
-      // Step 3: Prepare credential info
-      let credentialInfo = data.credential_sharing
-      if (data.credential_sharing === 'direct' && data.credentials_direct) {
-        credentialInfo += ` - Credentials provided`
-      }
-
-      // Step 4: Map form data to database schema
-      const dbSubmission: Omit<ClientOnboardingSubmission, 'id' | 'created_at'> = {
-        business_name: data.business_name,
-        email: data.email,
-        instagram_handle: data.instagram_handle,
-        other_platforms: data.other_platforms,
-        business_type: data.business_type + (data.business_type_other ? ` - ${data.business_type_other}` : ''),
-        product_categories: data.product_categories,
-        product_categories_other: data.product_categories_other,
-        common_questions: data.customer_questions,
-        common_questions_other: data.customer_questions_other,
-        delivery_option: deliveryInfo,
-        menu_file_url: menuFileUrl,
-        menu_text: data.menu_description || (data.faq_content?.substring(0, 500)) || '',
-        additional_docs_urls: additionalDocsUrls,
-        plan: data.plan,
-        credential_sharing: credentialInfo,
-        has_faqs: data.has_faqs,
-        faq_file_url: faqFileUrl,
-        consent_checkbox: data.consent_checkbox,
-        source: 'enhanced_onboarding_form',
-        payment_status: 'pending'
-      }
-
-      // Step 5: Insert data into Supabase using frontend client (RLS compatible)
-      const { data: submission, error } = await supabaseClient
-        .from('client_onboarding')
-        .insert([dbSubmission])
-        .select()
-        .single()
-
-      if (error) {
-        console.error('Database insertion error:', error)
-        throw new Error('Failed to save your information. Please try again.')
-      }
-
-      // Step 6: Send notification emails via API
-      try {
-        await fetch('/api/enhanced-onboarding', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            submission: submission,
-            formData: data,
-            fileUrls: {
-              menuFileUrl,
-              faqFileUrl,
-              additionalDocsUrls
-            }
-          }),
+      // Add delivery/pickup fields
+      formData.append('delivery_pickup', data.delivery_pickup)
+      if (data.delivery_options) {
+        data.delivery_options.forEach(option => {
+          formData.append('delivery_options', option)
         })
-      } catch (emailError) {
-        console.error('Email sending error:', emailError)
-        // Don't fail the entire submission if email fails
+      }
+      if (data.delivery_options_other) formData.append('delivery_options_other', data.delivery_options_other)
+      if (data.pickup_options) {
+        data.pickup_options.forEach(option => {
+          formData.append('pickup_options', option)
+        })
+      }
+      if (data.pickup_options_other) formData.append('pickup_options_other', data.pickup_options_other)
+      if (data.delivery_notes) formData.append('delivery_notes', data.delivery_notes)
+
+      // Add menu and FAQ fields
+      if (data.menu_description) formData.append('menu_description', data.menu_description)
+      formData.append('plan', data.plan)
+      formData.append('credential_sharing', data.credential_sharing)
+      if (data.credentials_direct) formData.append('credentials_direct', data.credentials_direct)
+      formData.append('has_faqs', data.has_faqs)
+      if (data.faq_content) formData.append('faq_content', data.faq_content)
+      formData.append('consent_checkbox', data.consent_checkbox.toString())
+
+      // Add files (let the server handle the uploads)
+      if (data.menu_file) {
+        formData.append('menu_file', data.menu_file)
+        console.log('📎 Menu file added to form data:', data.menu_file.name)
+      }
+      if (data.faq_file) {
+        formData.append('faq_file', data.faq_file)
+        console.log('📎 FAQ file added to form data:', data.faq_file.name)
+      }
+      if (data.additional_docs && data.additional_docs.length > 0) {
+        data.additional_docs.forEach((file, index) => {
+          formData.append('additional_docs', file)
+          console.log(`📎 Additional document ${index + 1} added to form data:`, file.name)
+        })
       }
 
-      // Step 7: Redirect to Stripe checkout with submission ID for tracking
-      const checkoutUrl = getStripeCheckoutUrl(data.plan, submission.id)
+      console.log('📤 Sending form data to server for processing')
+
+      // Step 2: Submit everything to the API (file upload + database save + emails)
+      const response = await fetch('/api/enhanced-onboarding', {
+        method: 'POST',
+        body: formData, // Send FormData (not JSON)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || 'Failed to submit form')
+      }
+
+      const result = await response.json()
+      console.log('✅ Server response:', result)
+
+      // Step 3: Redirect to Stripe checkout with submission ID for tracking
+      const checkoutUrl = getStripeCheckoutUrl(data.plan, result.submissionId)
       if (checkoutUrl) {
+        console.log('🔄 Redirecting to Stripe checkout')
         window.location.href = checkoutUrl
       } else {
         throw new Error('Invalid plan selected')
       }
 
     } catch (error) {
-      console.error('Form submission error:', error)
+      console.error('❌ Form submission error:', error)
       alert(`There was an error submitting your form: ${error instanceof Error ? error.message : 'Please try again.'}`)
     } finally {
       setIsSubmitting(false)
