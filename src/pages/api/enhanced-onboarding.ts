@@ -44,15 +44,6 @@ function getFileMetadata(file: unknown): {
   }
 }
 
-// Helper function to safely extract filename from formidable file
-function getFileName(file: formidable.File | formidable.File[] | undefined): string {
-  if (!file) return 'unknown'
-  
-  const singleFile = Array.isArray(file) ? file[0] : file
-  if (!singleFile) return 'unknown'
-  
-  return singleFile.originalFilename || singleFile.newFilename || 'unnamed-file'
-}
 
 // Helper function to parse form data with error handling
 async function parseFormData(req: NextApiRequest): Promise<{
@@ -454,13 +445,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       common_questions: formData.customer_questions,
       common_questions_other: formData.customer_questions_other,
       delivery_option: deliveryInfo,
-      menu_file_url: operationResults.menuFileUpload.url,
+      menu_file_url: operationResults.menuFileUpload.url || undefined,
       menu_text: formData.menu_description || (formData.faq_content?.substring(0, 500)) || '',
       additional_docs_urls: operationResults.additionalDocsUpload.urls,
       plan: formData.plan,
       credential_sharing: credentialInfo,
       has_faqs: formData.has_faqs,
-      faq_file_url: operationResults.faqFileUpload.url,
+      faq_file_url: operationResults.faqFileUpload.url || undefined,
       consent_checkbox: formData.consent_checkbox,
       source: 'enhanced_onboarding_form',
       payment_status: 'pending'
@@ -500,8 +491,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Step 6: Create enhanced form submission object for emails
       const enhancedSubmission: EnhancedFormSubmission = {
         ...formData,
-        menuFileUrl: operationResults.menuFileUpload.url,
-        faqFileUrl: operationResults.faqFileUpload.url,
+        menuFileUrl: operationResults.menuFileUpload.url || undefined,
+        faqFileUrl: operationResults.faqFileUpload.url || undefined,
         additionalDocsUrls: operationResults.additionalDocsUpload.urls,
         submissionId: submission.id!
       }
