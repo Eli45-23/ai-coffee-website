@@ -123,6 +123,16 @@ async function validateFileUrl(url: string, context: string = 'unknown'): Promis
   }
 }
 
+// Helper function to safely extract filename from formidable file
+function getFileName(file: formidable.File | formidable.File[] | undefined): string {
+  if (!file) return 'unknown'
+  
+  const singleFile = Array.isArray(file) ? file[0] : file
+  if (!singleFile) return 'unknown'
+  
+  return singleFile.originalFilename || singleFile.newFilename || 'unnamed-file'
+}
+
 // Helper function to parse form data
 async function parseFormData(req: NextApiRequest): Promise<{
   fields: formidable.Fields
@@ -262,7 +272,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.error('❌ Menu file upload failed with detailed error:', {
           error: error instanceof Error ? error.message : 'Unknown error',
           errorStack: error instanceof Error ? error.stack : undefined,
-          fileName: Array.isArray(files.menu_file) ? files.menu_file[0]?.originalFilename : files.menu_file?.originalFilename,
+          fileName: getFileName(files.menu_file),
           bucket: 'menus',
           folder: 'menus'
         })
@@ -310,7 +320,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.error('❌ FAQ file upload failed with detailed error:', {
           error: error instanceof Error ? error.message : 'Unknown error',
           errorStack: error instanceof Error ? error.stack : undefined,
-          fileName: Array.isArray(files.faq_file) ? files.faq_file[0]?.originalFilename : files.faq_file?.originalFilename,
+          fileName: getFileName(files.faq_file),
           bucket: 'faqs',
           folder: 'faqs'
         })
@@ -368,8 +378,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           errorStack: error instanceof Error ? error.stack : undefined,
           fileCount: Array.isArray(files.additional_docs) ? files.additional_docs.length : 1,
           fileNames: Array.isArray(files.additional_docs) 
-            ? files.additional_docs.map(f => f.originalFilename)
-            : [files.additional_docs?.originalFilename],
+            ? files.additional_docs.map(f => getFileName(f))
+            : [getFileName(files.additional_docs)],
           bucket: 'documents',
           folder: 'documents'
         })
@@ -577,7 +587,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         )
       }
       if (submission.additional_docs_urls?.length) {
-        submission.additional_docs_urls.forEach((url, index) => {
+        submission.additional_docs_urls.forEach((url: string, index: number) => {
           verificationPromises.push(
             validateFileUrl(url, `post-db-additional-${index + 1}-verification`)
               .then(valid => ({ type: `additional-${index + 1}`, valid, url }))
