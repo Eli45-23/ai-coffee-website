@@ -181,11 +181,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (Array.isArray(file)) {
         console.log(`📁 File field '${fieldName}': Array with ${file.length} files`)
         file.forEach((f, index) => {
-          console.log(`  [${index}] ${f.originalFilename || f.newFilename} (${f.size} bytes, ${f.mimetype})`)
+          const fileName = getFileName(f)
+          const fileObj = f as formidable.File
+          console.log(`  [${index}] ${fileName} (${fileObj.size || 0} bytes, ${fileObj.mimetype || 'unknown'})`)
         })
       } else if (file) {
         console.log(`📁 File field '${fieldName}': Single file`)
-        console.log(`  ${file.originalFilename || file.newFilename} (${file.size} bytes, ${file.mimetype})`)
+        const fileName = getFileName(file)
+        const fileObj = file as formidable.File
+        console.log(`  ${fileName} (${fileObj.size || 0} bytes, ${fileObj.mimetype || 'unknown'})`)
       }
     })
 

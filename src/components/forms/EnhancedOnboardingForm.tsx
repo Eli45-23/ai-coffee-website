@@ -202,13 +202,14 @@ export default function EnhancedOnboardingForm({ initialPlan = 'starter' }: Enha
 
       // Debug FormData contents
       console.log('📋 FormData entries being sent to server:')
-      for (let [key, value] of formData.entries()) {
+      const formDataEntries = Array.from(formData.entries())
+      formDataEntries.forEach(([key, value]) => {
         if (value instanceof File) {
           console.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`)
         } else {
           console.log(`  ${key}: ${value}`)
         }
-      }
+      })
 
       console.log('📤 Sending form data to server for processing')
 
