@@ -116,6 +116,50 @@ CREATE POLICY "Enable select for anonymous users" ON form_submissions FOR SELECT
 CREATE POLICY "Enable update for service role" ON form_submissions FOR UPDATE USING (auth.role() = 'service_role');
 ```
 
+### Storage Bucket Setup
+
+**IMPORTANT**: Create storage buckets for file uploads. Run the following SQL in your Supabase SQL Editor:
+
+```sql
+-- Create storage buckets
+INSERT INTO storage.buckets (id, name, public)
+VALUES 
+  ('menus', 'menus', true),
+  ('faqs', 'faqs', true),
+  ('documents', 'documents', true);
+
+-- Set up storage policies for file uploads
+CREATE POLICY "Allow file uploads to menus bucket" 
+ON storage.objects FOR INSERT 
+WITH CHECK (bucket_id = 'menus');
+
+CREATE POLICY "Allow public access to menus bucket files" 
+ON storage.objects FOR SELECT 
+USING (bucket_id = 'menus');
+
+CREATE POLICY "Allow file uploads to faqs bucket" 
+ON storage.objects FOR INSERT 
+WITH CHECK (bucket_id = 'faqs');
+
+CREATE POLICY "Allow public access to faqs bucket files" 
+ON storage.objects FOR SELECT 
+USING (bucket_id = 'faqs');
+
+CREATE POLICY "Allow file uploads to documents bucket" 
+ON storage.objects FOR INSERT 
+WITH CHECK (bucket_id = 'documents');
+
+CREATE POLICY "Allow public access to documents bucket files" 
+ON storage.objects FOR SELECT 
+USING (bucket_id = 'documents');
+```
+
+Alternatively, you can run the provided setup script:
+```bash
+# Copy the SQL content from setup-storage-buckets.sql
+# and run it in your Supabase SQL Editor
+```
+
 ## 💳 Stripe Setup
 
 ### 1. Create Products and Prices
