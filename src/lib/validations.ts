@@ -188,6 +188,8 @@ export const enhancedOnboardingFormSchema = z.object({
   delivery_notes: z.string().optional(),
   
   // Menu & Documentation
+  menu_file: z.instanceof(File).optional(),
+  additional_docs: z.array(z.instanceof(File)).optional(),
   menu_description: z.string().optional(),
   
   // Plan Selection
@@ -199,6 +201,7 @@ export const enhancedOnboardingFormSchema = z.object({
   
   // FAQ Upload
   has_faqs: z.enum(['yes', 'no']),
+  faq_file: z.instanceof(File).optional(),
   faq_content: z.string().optional(),
   
   // Contact & Consent
