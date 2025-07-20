@@ -13,11 +13,112 @@ export const config = {
 }
 
 // Helper function to validate file URLs are accessible
-async function validateFileUrl(url: string): Promise<boolean> {
+async function validateFileUrl(url: string, context: string = 'unknown'): Promise<boolean> {
+  const validationId = Math.random().toString(36).substring(2, 6)
+  const startTime = Date.now()
+  
+  console.log(`🔍 [${validationId}] Starting URL validation for ${context}:`, {
+    url: url.substring(0, 100) + (url.length > 100 ? '...' : ''),
+    fullUrlLength: url.length,
+    context,
+    timestamp: new Date().toISOString()
+  })
+
+  // Basic URL format validation first
+  if (!url || typeof url !== 'string') {
+    console.error(`❌ [${validationId}] Invalid URL format - not a string:`, {
+      url: url,
+      type: typeof url,
+      context
+    })
+    return false
+  }
+
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    console.error(`❌ [${validationId}] Invalid URL format - missing protocol:`, {
+      url: url.substring(0, 50) + '...',
+      context,
+      startsWithHttp: url.startsWith('http'),
+      startsWithHttps: url.startsWith('https')
+    })
+    return false
+  }
+
   try {
-    const response = await fetch(url, { method: 'HEAD' })
+    // Test URL constructor validity
+    const urlObj = new URL(url)
+    console.log(`✅ [${validationId}] URL format validation passed:`, {
+      protocol: urlObj.protocol,
+      hostname: urlObj.hostname,
+      pathname: urlObj.pathname.substring(0, 50) + (urlObj.pathname.length > 50 ? '...' : ''),
+      context
+    })
+
+    // Attempt HEAD request with timeout
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
+    console.log(`🌐 [${validationId}] Attempting HEAD request to validate accessibility...`)
+    
+    const response = await fetch(url, { 
+      method: 'HEAD',
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'AI-Coffee-Bot/1.0 (URL Validator)'
+      }
+    })
+    
+    clearTimeout(timeoutId)
+    const duration = Date.now() - startTime
+
+    console.log(`${response.ok ? '✅' : '❌'} [${validationId}] HEAD request completed:`, {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      duration: `${duration}ms`,
+      headers: {
+        contentType: response.headers.get('content-type'),
+        contentLength: response.headers.get('content-length'),
+        lastModified: response.headers.get('last-modified'),
+        cacheControl: response.headers.get('cache-control')
+      },
+      context
+    })
+
+    if (!response.ok) {
+      console.warn(`⚠️ [${validationId}] URL accessible but returned non-OK status:`, {
+        status: response.status,
+        statusText: response.statusText,
+        possibleIssues: response.status === 403 ? 'Forbidden - check bucket permissions' : 
+                       response.status === 404 ? 'Not Found - file may not exist' :
+                       response.status >= 500 ? 'Server Error - Supabase issues' : 'Unknown',
+        context
+      })
+    }
+
     return response.ok
-  } catch {
+
+  } catch (error) {
+    const duration = Date.now() - startTime
+    
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error(`❌ [${validationId}] URL validation timed out after ${duration}ms:`, {
+        url: url.substring(0, 50) + '...',
+        error: 'Request timeout (>10s)',
+        context,
+        possibleCauses: ['Network issues', 'Supabase storage slow', 'Invalid URL', 'Firewall blocking']
+      })
+    } else {
+      console.error(`❌ [${validationId}] URL validation failed after ${duration}ms:`, {
+        url: url.substring(0, 50) + '...',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        errorName: error instanceof Error ? error.name : 'Unknown',
+        errorStack: error instanceof Error ? error.stack?.split('\n')[0] : undefined,
+        context,
+        possibleCauses: ['Network connectivity', 'CORS issues', 'Invalid URL', 'Supabase permissions']
+      })
+    }
+    
     return false
   }
 }
@@ -115,53 +216,189 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let faqFileUrl: string | undefined
     let additionalDocsUrls: string[] = []
 
+    console.log('📁 File upload analysis - received files:', {
+      totalFileFields: Object.keys(files).length,
+      fileFieldNames: Object.keys(files),
+      menuFilePresent: !!files.menu_file,
+      faqFilePresent: !!files.faq_file,
+      additionalDocsPresent: !!files.additional_docs
+    })
+
     // Upload menu file to 'menus' bucket
     if (files.menu_file) {
       try {
-        console.log('📤 Uploading menu file to menus bucket')
         const menuFile = Array.isArray(files.menu_file) ? files.menu_file[0] : files.menu_file
+        
+        console.log('📤 Starting menu file upload to menus bucket:', {
+          fieldName: 'menu_file',
+          bucket: 'menus',
+          folder: 'menus',
+          isArray: Array.isArray(files.menu_file),
+          fileDetails: {
+            originalName: menuFile.originalFilename,
+            newName: menuFile.newFilename,
+            size: menuFile.size,
+            mimetype: menuFile.mimetype,
+            filepath: menuFile.filepath
+          }
+        })
+        
         menuFileUrl = await uploadFileToSupabase(menuFile, 'menus', 'menus')
-        console.log('✅ Menu file uploaded successfully:', menuFileUrl)
+        
+        console.log('✅ Menu file upload completed successfully:', {
+          originalName: menuFile.originalFilename,
+          finalUrl: menuFileUrl,
+          urlLength: menuFileUrl.length,
+          urlStartsWith: menuFileUrl.substring(0, 50) + '...',
+          bucket: 'menus'
+        })
+        
+        // Validate URL format
+        if (!menuFileUrl.includes('supabase')) {
+          console.warn('⚠️ Menu file URL does not contain "supabase" - may be invalid:', menuFileUrl)
+        }
+        
       } catch (error) {
-        console.error('❌ Menu file upload failed:', error)
+        console.error('❌ Menu file upload failed with detailed error:', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          errorStack: error instanceof Error ? error.stack : undefined,
+          fileName: Array.isArray(files.menu_file) ? files.menu_file[0]?.originalFilename : files.menu_file?.originalFilename,
+          bucket: 'menus',
+          folder: 'menus'
+        })
         throw new Error('Failed to upload menu file. Please try again.')
       }
     } else {
-      console.log('ℹ️ No menu file provided')
+      console.log('ℹ️ No menu file provided in form submission')
     }
 
     // Upload FAQ file to 'faqs' bucket (CORRECTED from 'documents')
     if (files.faq_file) {
       try {
-        console.log('📤 Uploading FAQ file to faqs bucket')
         const faqFile = Array.isArray(files.faq_file) ? files.faq_file[0] : files.faq_file
+        
+        console.log('📤 Starting FAQ file upload to faqs bucket:', {
+          fieldName: 'faq_file',
+          bucket: 'faqs',
+          folder: 'faqs',
+          isArray: Array.isArray(files.faq_file),
+          fileDetails: {
+            originalName: faqFile.originalFilename,
+            newName: faqFile.newFilename,
+            size: faqFile.size,
+            mimetype: faqFile.mimetype,
+            filepath: faqFile.filepath
+          }
+        })
+        
         faqFileUrl = await uploadFileToSupabase(faqFile, 'faqs', 'faqs')
-        console.log('✅ FAQ file uploaded successfully:', faqFileUrl)
+        
+        console.log('✅ FAQ file upload completed successfully:', {
+          originalName: faqFile.originalFilename,
+          finalUrl: faqFileUrl,
+          urlLength: faqFileUrl.length,
+          urlStartsWith: faqFileUrl.substring(0, 50) + '...',
+          bucket: 'faqs'
+        })
+        
+        // Validate URL format
+        if (!faqFileUrl.includes('supabase')) {
+          console.warn('⚠️ FAQ file URL does not contain "supabase" - may be invalid:', faqFileUrl)
+        }
+        
       } catch (error) {
-        console.error('❌ FAQ file upload failed:', error)
+        console.error('❌ FAQ file upload failed with detailed error:', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          errorStack: error instanceof Error ? error.stack : undefined,
+          fileName: Array.isArray(files.faq_file) ? files.faq_file[0]?.originalFilename : files.faq_file?.originalFilename,
+          bucket: 'faqs',
+          folder: 'faqs'
+        })
         throw new Error('Failed to upload FAQ file. Please try again.')
       }
     } else {
-      console.log('ℹ️ No FAQ file provided')
+      console.log('ℹ️ No FAQ file provided in form submission')
     }
 
     // Upload additional documents to 'documents' bucket
     if (files.additional_docs) {
       try {
-        console.log('📤 Uploading additional documents to documents bucket')
         const additionalFiles = Array.isArray(files.additional_docs) ? files.additional_docs : [files.additional_docs]
-        additionalDocsUrls = await uploadMultipleFiles(additionalFiles, 'documents', 'documents')
-        console.log('✅ Additional documents uploaded successfully:', {
-          count: additionalDocsUrls.length,
-          urls: additionalDocsUrls
+        
+        console.log('📤 Starting additional documents upload to documents bucket:', {
+          fieldName: 'additional_docs',
+          bucket: 'documents',
+          folder: 'documents',
+          fileCount: additionalFiles.length,
+          isArray: Array.isArray(files.additional_docs),
+          fileDetails: additionalFiles.map((file, index) => ({
+            index,
+            originalName: file.originalFilename,
+            newName: file.newFilename,
+            size: file.size,
+            mimetype: file.mimetype,
+            filepath: file.filepath
+          }))
         })
+        
+        additionalDocsUrls = await uploadMultipleFiles(additionalFiles, 'documents', 'documents')
+        
+        console.log('✅ Additional documents upload completed successfully:', {
+          uploadCount: additionalDocsUrls.length,
+          totalFiles: additionalFiles.length,
+          urls: additionalDocsUrls,
+          urlSummary: additionalDocsUrls.map((url, index) => ({
+            index,
+            url: url.substring(0, 50) + '...',
+            length: url.length,
+            originalName: additionalFiles[index]?.originalFilename
+          })),
+          bucket: 'documents'
+        })
+        
+        // Validate URL formats
+        const invalidUrls = additionalDocsUrls.filter(url => !url.includes('supabase'))
+        if (invalidUrls.length > 0) {
+          console.warn('⚠️ Some additional document URLs do not contain "supabase" - may be invalid:', invalidUrls)
+        }
+        
       } catch (error) {
-        console.error('❌ Additional documents upload failed:', error)
+        console.error('❌ Additional documents upload failed with detailed error:', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          errorStack: error instanceof Error ? error.stack : undefined,
+          fileCount: Array.isArray(files.additional_docs) ? files.additional_docs.length : 1,
+          fileNames: Array.isArray(files.additional_docs) 
+            ? files.additional_docs.map(f => f.originalFilename)
+            : [files.additional_docs?.originalFilename],
+          bucket: 'documents',
+          folder: 'documents'
+        })
         throw new Error('Failed to upload additional documents. Please try again.')
       }
     } else {
-      console.log('ℹ️ No additional documents provided')
+      console.log('ℹ️ No additional documents provided in form submission')
     }
+
+    // Summary of all file uploads
+    console.log('📋 File upload summary for this submission:', {
+      menuFile: {
+        uploaded: !!menuFileUrl,
+        url: menuFileUrl || 'Not uploaded',
+        bucket: 'menus'
+      },
+      faqFile: {
+        uploaded: !!faqFileUrl,
+        url: faqFileUrl || 'Not uploaded',
+        bucket: 'faqs'
+      },
+      additionalDocs: {
+        uploaded: additionalDocsUrls.length > 0,
+        count: additionalDocsUrls.length,
+        urls: additionalDocsUrls,
+        bucket: 'documents'
+      },
+      totalFilesUploaded: (menuFileUrl ? 1 : 0) + (faqFileUrl ? 1 : 0) + additionalDocsUrls.length
+    })
 
     // Step 4: Prepare data for database insertion
     let deliveryInfo = formData.delivery_pickup
@@ -216,24 +453,157 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Step 5: Insert data into Supabase database
-    console.log('💾 Inserting submission data into database')
+    console.log('💾 Preparing database insertion with file URL verification:', {
+      businessName: formData.business_name,
+      email: formData.email,
+      plan: formData.plan,
+      fileUrlsToStore: {
+        menuFileUrl: menuFileUrl ? {
+          url: menuFileUrl.substring(0, 50) + '...',
+          length: menuFileUrl.length,
+          isHttps: menuFileUrl.startsWith('https://'),
+          containsSupabase: menuFileUrl.includes('supabase')
+        } : null,
+        faqFileUrl: faqFileUrl ? {
+          url: faqFileUrl.substring(0, 50) + '...',
+          length: faqFileUrl.length,
+          isHttps: faqFileUrl.startsWith('https://'),
+          containsSupabase: faqFileUrl.includes('supabase')
+        } : null,
+        additionalDocsUrls: additionalDocsUrls.map((url, index) => ({
+          index,
+          url: url.substring(0, 50) + '...',
+          length: url.length,
+          isHttps: url.startsWith('https://'),
+          containsSupabase: url.includes('supabase')
+        }))
+      }
+    })
+
+    // Validate URLs before database insertion
+    const urlValidationIssues = []
+    if (menuFileUrl && (!menuFileUrl.startsWith('https://') || !menuFileUrl.includes('supabase'))) {
+      urlValidationIssues.push(`Menu file URL format issue: ${menuFileUrl.substring(0, 50)}...`)
+    }
+    if (faqFileUrl && (!faqFileUrl.startsWith('https://') || !faqFileUrl.includes('supabase'))) {
+      urlValidationIssues.push(`FAQ file URL format issue: ${faqFileUrl.substring(0, 50)}...`)
+    }
+    additionalDocsUrls.forEach((url, index) => {
+      if (!url.startsWith('https://') || !url.includes('supabase')) {
+        urlValidationIssues.push(`Additional doc ${index + 1} URL format issue: ${url.substring(0, 50)}...`)
+      }
+    })
+
+    if (urlValidationIssues.length > 0) {
+      console.warn('⚠️ URL format validation issues before database storage:', urlValidationIssues)
+    } else {
+      console.log('✅ All file URLs passed format validation before database storage')
+    }
+
+    console.log('💾 Executing database insertion...')
+    const dbInsertStartTime = Date.now()
+    
     const { data: submission, error } = await supabaseClient
       .from('client_onboarding')
       .insert([dbSubmission])
       .select()
       .single()
 
+    const dbInsertDuration = Date.now() - dbInsertStartTime
+
     if (error) {
-      console.error('❌ Database insertion error:', error)
+      console.error('❌ Database insertion failed:', {
+        error: error.message,
+        errorCode: error.code,
+        errorDetails: error.details,
+        errorHint: error.hint,
+        duration: `${dbInsertDuration}ms`,
+        attemptedData: {
+          businessName: dbSubmission.business_name,
+          email: dbSubmission.email,
+          plan: dbSubmission.plan,
+          hasMenuUrl: !!dbSubmission.menu_file_url,
+          hasFaqUrl: !!dbSubmission.faq_file_url,
+          additionalDocsCount: dbSubmission.additional_docs_urls?.length || 0
+        }
+      })
       throw new Error('Failed to save your information. Please try again.')
     }
 
-    console.log('✅ Submission saved to database:', {
+    console.log('✅ Database insertion successful:', {
       submissionId: submission.id,
-      hasMenuFile: !!menuFileUrl,
-      hasFaqFile: !!faqFileUrl,
-      additionalDocsCount: additionalDocsUrls.length
+      duration: `${dbInsertDuration}ms`,
+      storedFileUrls: {
+        menuFileUrl: submission.menu_file_url ? {
+          stored: true,
+          urlPreview: submission.menu_file_url.substring(0, 50) + '...',
+          matches: submission.menu_file_url === menuFileUrl
+        } : { stored: false },
+        faqFileUrl: submission.faq_file_url ? {
+          stored: true,
+          urlPreview: submission.faq_file_url.substring(0, 50) + '...',
+          matches: submission.faq_file_url === faqFileUrl
+        } : { stored: false },
+        additionalDocsUrls: submission.additional_docs_urls ? {
+          stored: true,
+          count: submission.additional_docs_urls.length,
+          matches: JSON.stringify(submission.additional_docs_urls) === JSON.stringify(additionalDocsUrls)
+        } : { stored: false }
+      },
+      dbRecord: {
+        id: submission.id,
+        businessName: submission.business_name,
+        email: submission.email,
+        plan: submission.plan,
+        createdAt: submission.created_at
+      }
     })
+
+    // Verify stored URLs are accessible (optional verification step)
+    if (submission.menu_file_url || submission.faq_file_url || (submission.additional_docs_urls?.length || 0) > 0) {
+      console.log('🔍 Post-storage URL verification starting...')
+      
+      const verificationPromises = []
+      if (submission.menu_file_url) {
+        verificationPromises.push(
+          validateFileUrl(submission.menu_file_url, 'post-db-menu-verification')
+            .then(valid => ({ type: 'menu', valid, url: submission.menu_file_url }))
+        )
+      }
+      if (submission.faq_file_url) {
+        verificationPromises.push(
+          validateFileUrl(submission.faq_file_url, 'post-db-faq-verification')
+            .then(valid => ({ type: 'faq', valid, url: submission.faq_file_url }))
+        )
+      }
+      if (submission.additional_docs_urls?.length) {
+        submission.additional_docs_urls.forEach((url, index) => {
+          verificationPromises.push(
+            validateFileUrl(url, `post-db-additional-${index + 1}-verification`)
+              .then(valid => ({ type: `additional-${index + 1}`, valid, url }))
+          )
+        })
+      }
+
+      // Run verifications in parallel but don't block the response
+      Promise.all(verificationPromises).then(results => {
+        const verificationSummary = results.reduce((acc, result) => {
+          acc[result.type] = { valid: result.valid, url: result.url.substring(0, 50) + '...' }
+          return acc
+        }, {} as Record<string, { valid: boolean, url: string }>)
+        
+        console.log('🔍 Post-storage URL verification completed:', verificationSummary)
+        
+        const failedVerifications = results.filter(r => !r.valid)
+        if (failedVerifications.length > 0) {
+          console.error('❌ Some stored URLs failed post-storage verification:', 
+            failedVerifications.map(f => ({ type: f.type, url: f.url.substring(0, 50) + '...' }))
+          )
+        }
+      }).catch(verificationError => {
+        console.warn('⚠️ Post-storage URL verification failed:', verificationError instanceof Error ? verificationError.message : 'Unknown error')
+      })
+    }
 
     // Step 6: Create enhanced form submission object for emails
     const enhancedSubmission: EnhancedFormSubmission = {
@@ -275,37 +645,78 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const adminEmail = createEnhancedAdminNotificationEmail(enhancedSubmission)
       
       // Prepare and validate attachments for admin email
+      console.log('📎 Starting email attachment validation process:', {
+        hasMenuFile: !!menuFileUrl,
+        hasFaqFile: !!faqFileUrl,
+        additionalDocsCount: additionalDocsUrls.length,
+        totalPotentialAttachments: (menuFileUrl ? 1 : 0) + (faqFileUrl ? 1 : 0) + additionalDocsUrls.length
+      })
+
       const attachments = []
+      
       if (menuFileUrl) {
-        const isValid = await validateFileUrl(menuFileUrl)
+        console.log('🔍 Validating menu file URL for email attachment...')
+        const isValid = await validateFileUrl(menuFileUrl, 'menu-file-email-attachment')
         if (isValid) {
           attachments.push({ filename: 'menu-document', url: menuFileUrl })
-          console.log('✅ Menu file attachment validated and added')
+          console.log('✅ Menu file attachment validated and added to email')
         } else {
-          console.warn(`⚠️ Menu file URL not accessible: ${menuFileUrl}`)
+          console.warn(`⚠️ Menu file URL validation failed - will not attach to email:`, {
+            url: menuFileUrl.substring(0, 50) + '...',
+            bucket: 'menus',
+            impact: 'Email will be sent without menu attachment'
+          })
         }
       }
+      
       if (faqFileUrl) {
-        const isValid = await validateFileUrl(faqFileUrl)
+        console.log('🔍 Validating FAQ file URL for email attachment...')
+        const isValid = await validateFileUrl(faqFileUrl, 'faq-file-email-attachment')
         if (isValid) {
           attachments.push({ filename: 'faq-document', url: faqFileUrl })
-          console.log('✅ FAQ file attachment validated and added')
+          console.log('✅ FAQ file attachment validated and added to email')
         } else {
-          console.warn(`⚠️ FAQ file URL not accessible: ${faqFileUrl}`)
+          console.warn(`⚠️ FAQ file URL validation failed - will not attach to email:`, {
+            url: faqFileUrl.substring(0, 50) + '...',
+            bucket: 'faqs',
+            impact: 'Email will be sent without FAQ attachment'
+          })
         }
       }
+      
       if (additionalDocsUrls && additionalDocsUrls.length > 0) {
+        console.log(`🔍 Validating ${additionalDocsUrls.length} additional document URLs for email attachments...`)
         for (let i = 0; i < additionalDocsUrls.length; i++) {
           const url = additionalDocsUrls[i]
-          const isValid = await validateFileUrl(url)
+          console.log(`🔍 Validating additional document ${i + 1}/${additionalDocsUrls.length}...`)
+          const isValid = await validateFileUrl(url, `additional-doc-${i + 1}-email-attachment`)
           if (isValid) {
             attachments.push({ filename: `additional-document-${i + 1}`, url })
-            console.log(`✅ Additional document ${i + 1} attachment validated and added`)
+            console.log(`✅ Additional document ${i + 1} attachment validated and added to email`)
           } else {
-            console.warn(`⚠️ Additional document URL not accessible: ${url}`)
+            console.warn(`⚠️ Additional document ${i + 1} URL validation failed - will not attach to email:`, {
+              url: url.substring(0, 50) + '...',
+              index: i + 1,
+              bucket: 'documents',
+              impact: `Email will be sent without additional document ${i + 1} attachment`
+            })
           }
         }
       }
+
+      console.log('📎 Email attachment validation completed:', {
+        totalValidated: (menuFileUrl ? 1 : 0) + (faqFileUrl ? 1 : 0) + additionalDocsUrls.length,
+        validAttachments: attachments.length,
+        attachmentSummary: attachments.map(a => ({
+          filename: a.filename,
+          urlPreview: a.url.substring(0, 50) + '...'
+        })),
+        validationResults: {
+          menuFile: menuFileUrl ? 'validated' : 'not provided',
+          faqFile: faqFileUrl ? 'validated' : 'not provided',
+          additionalDocs: `${attachments.filter(a => a.filename.startsWith('additional')).length}/${additionalDocsUrls.length} valid`
+        }
+      })
 
       console.log('📧 Sending admin notification with:', {
         businessName: formData.business_name,

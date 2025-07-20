@@ -448,6 +448,49 @@ export function createEnhancedAdminNotificationEmail(submission: EnhancedFormSub
               </div>
             </div>
 
+            <!-- Debug Information Section - For Development/Testing -->
+            <div style="margin-bottom: 32px;">
+              <h2 style="color: #1f2937; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #ef4444; padding-bottom: 8px;">🔧 Debug Info (Development)</h2>
+              <div style="background: #fafafa; padding: 20px; border-radius: 8px; border: 2px dashed #d1d5db; font-family: 'Courier New', monospace; font-size: 12px;">
+                <p style="margin: 0 0 8px 0; color: #374151;"><strong>Submission ID:</strong> ${submission.submissionId || 'Not available'}</p>
+                ${submission.menuFileUrl ? `
+                  <p style="margin: 0 0 8px 0; color: #374151;"><strong>Menu File URL:</strong></p>
+                  <p style="margin: 0 0 8px 0; color: #4b5563; word-break: break-all; background: #ffffff; padding: 8px; border-radius: 4px; border: 1px solid #e5e7eb;"><a href="${submission.menuFileUrl}" style="color: #3b82f6; text-decoration: none;">${submission.menuFileUrl}</a></p>
+                ` : '<p style="margin: 0 0 8px 0; color: #6b7280;">Menu File URL: Not provided</p>'}
+                
+                ${submission.faqFileUrl ? `
+                  <p style="margin: 0 0 8px 0; color: #374151;"><strong>FAQ File URL:</strong></p>
+                  <p style="margin: 0 0 8px 0; color: #4b5563; word-break: break-all; background: #ffffff; padding: 8px; border-radius: 4px; border: 1px solid #e5e7eb;"><a href="${submission.faqFileUrl}" style="color: #3b82f6; text-decoration: none;">${submission.faqFileUrl}</a></p>
+                ` : '<p style="margin: 0 0 8px 0; color: #6b7280;">FAQ File URL: Not provided</p>'}
+                
+                ${submission.additionalDocsUrls && submission.additionalDocsUrls.length > 0 ? `
+                  <p style="margin: 0 0 8px 0; color: #374151;"><strong>Additional Document URLs:</strong></p>
+                  ${submission.additionalDocsUrls.map((url, index) => `
+                    <p style="margin: 0 0 4px 0; color: #4b5563; word-break: break-all; background: #ffffff; padding: 6px; border-radius: 4px; border: 1px solid #e5e7eb;">
+                      <span style="color: #6b7280;">[${index + 1}]</span> <a href="${url}" style="color: #3b82f6; text-decoration: none;">${url}</a>
+                    </p>
+                  `).join('')}
+                ` : '<p style="margin: 0 0 8px 0; color: #6b7280;">Additional Documents: None provided</p>'}
+                
+                <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                  <p style="margin: 0 0 4px 0; color: #374151;"><strong>File Upload Summary:</strong></p>
+                  <p style="margin: 0 0 4px 0; color: #4b5563;">
+                    📁 Menu: ${submission.menuFileUrl ? '✅ Uploaded' : '❌ Not uploaded'} 
+                    | 📋 FAQ: ${submission.faqFileUrl ? '✅ Uploaded' : '❌ Not uploaded'} 
+                    | 📎 Additional: ${submission.additionalDocsUrls?.length || 0} files
+                  </p>
+                  <p style="margin: 0; color: #6b7280; font-size: 11px;">
+                    Total Files: ${(submission.menuFileUrl ? 1 : 0) + (submission.faqFileUrl ? 1 : 0) + (submission.additionalDocsUrls?.length || 0)}
+                  </p>
+                </div>
+                
+                <div style="margin-top: 12px; padding: 8px; background: #fef3c7; border-radius: 4px; border: 1px solid #f59e0b;">
+                  <p style="margin: 0; color: #92400e; font-size: 11px; font-weight: 600;">⚠️ This debug section is for development/testing purposes</p>
+                  <p style="margin: 4px 0 0 0; color: #92400e; font-size: 10px;">Click URLs above to test file accessibility directly</p>
+                </div>
+              </div>
+            </div>
+
             <!-- Action Required -->
             <div style="background: #fee2e2; border: 1px solid #fca5a5; padding: 20px; border-radius: 8px; text-align: center;">
               <p style="margin: 0; color: #dc2626; font-weight: 600; font-size: 16px;">⚠️ Action Required: Set up ${submission.business_name}'s account</p>
