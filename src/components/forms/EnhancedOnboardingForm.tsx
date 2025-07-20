@@ -156,19 +156,58 @@ export default function EnhancedOnboardingForm({ initialPlan = 'starter' }: Enha
       formData.append('consent_checkbox', data.consent_checkbox.toString())
 
       // Add files (let the server handle the uploads)
+      console.log('🔍 Checking for files to upload:', {
+        hasMenuFile: !!data.menu_file,
+        hasFaqFile: !!data.faq_file,
+        hasAdditionalDocs: !!(data.additional_docs && data.additional_docs.length > 0),
+        menuFileName: data.menu_file?.name || 'none',
+        faqFileName: data.faq_file?.name || 'none',
+        additionalDocsCount: data.additional_docs?.length || 0
+      })
+
       if (data.menu_file) {
         formData.append('menu_file', data.menu_file)
-        console.log('📎 Menu file added to form data:', data.menu_file.name)
+        console.log('📎 Menu file added to form data:', {
+          name: data.menu_file.name,
+          size: data.menu_file.size,
+          type: data.menu_file.type
+        })
+      } else {
+        console.log('⚠️ No menu file selected')
       }
+      
       if (data.faq_file) {
         formData.append('faq_file', data.faq_file)
-        console.log('📎 FAQ file added to form data:', data.faq_file.name)
+        console.log('📎 FAQ file added to form data:', {
+          name: data.faq_file.name,
+          size: data.faq_file.size,
+          type: data.faq_file.type
+        })
+      } else {
+        console.log('⚠️ No FAQ file selected')
       }
+      
       if (data.additional_docs && data.additional_docs.length > 0) {
         data.additional_docs.forEach((file, index) => {
           formData.append('additional_docs', file)
-          console.log(`📎 Additional document ${index + 1} added to form data:`, file.name)
+          console.log(`📎 Additional document ${index + 1} added to form data:`, {
+            name: file.name,
+            size: file.size,
+            type: file.type
+          })
         })
+      } else {
+        console.log('⚠️ No additional documents selected')
+      }
+
+      // Debug FormData contents
+      console.log('📋 FormData entries being sent to server:')
+      for (let [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          console.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`)
+        } else {
+          console.log(`  ${key}: ${value}`)
+        }
       }
 
       console.log('📤 Sending form data to server for processing')
